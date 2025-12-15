@@ -1,0 +1,23 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(92, 143, 204, 0.7);
+  border: 3px dashed rgb(38, 120, 221);
+
+  backdrop-filter: blur(3px);
+  margin: 40px;
+  border-radius: 20px;
+
+  z-index: 9999;
+  pointer-events: none;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 2rem;
+  color: #ddd;
+  font-weight: 500;
+
+  transition: 0.15s ease;
+}

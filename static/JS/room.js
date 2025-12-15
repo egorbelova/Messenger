@@ -115,7 +115,7 @@ function openCity(evt, cityName) {
   for (i = 0; i < tablinks.length; i++) {
     tablinks[i].className = tablinks[i].className.replace(' active', '');
   }
-  document.getElementById(cityName).style.display = 'block';
+  document.getElementById(cityName).style.display = 'flex';
   evt.currentTarget.className += ' active';
 
   /*    document.querySelector(".attachments").scrollIntoView({
@@ -171,23 +171,6 @@ function go_home_page_func() {
 
 prev_audio_link = '';
 
-// function enableDoubleTap(element, callback) {
-//   let lastTap = 0;
-
-//   element.addEventListener('click', function (event) {
-//     const currentTime = new Date().getTime();
-//     const tapLength = currentTime - lastTap;
-
-//     if (tapLength < 500 && tapLength > 0) {
-//       event.preventDefault();
-//       callback.call(this, event);
-//       lastTap = 0;
-//     } else {
-//       lastTap = currentTime;
-//     }
-//   });
-// }
-
 function enableDoubleTap(element, callback) {
   let lastTap = 0;
   let tapTimeout;
@@ -212,7 +195,8 @@ function enableDoubleTap(element, callback) {
   );
 
   element.addEventListener('touchend', function (event) {
-    // event.preventDefault();
+    if (event.target.closest('.user_file_pres')) return;
+    if (event.cancelable) event.preventDefault();
     const currentTime = new Date().getTime();
     const tapLength = currentTime - lastTap;
 
@@ -257,7 +241,6 @@ function enableDoubleTap(element, callback) {
 
 window.addEventListener('beforeunload', (event) => {
   if (window.location.hash) {
-    // event.preventDefault();
     event.returnValue = '';
     return '';
   }
@@ -767,7 +750,11 @@ async function demo() {
 let clearChatTimeOut;
 
 window.onload = function () {
-  const themeMeta = document.querySelector('meta[name="theme-color"]');
+  // const themeMeta = document.querySelector('meta[name="theme-color"]');
+  const searchDivPlaceHolder = document.querySelector(
+    '.search_field_placeholder'
+  );
+  const textAreaPlaceHolder = document.querySelector('.textarea_placeholder');
   const signal = controller.signal;
   window.history.replaceState(null, null, null);
 
@@ -839,10 +826,26 @@ window.onload = function () {
     document.querySelector('.main_chat_window').classList.add('swipe');
     document
       .querySelector('#display')
-      .addEventListener('touchmove', throttle(handleSwipeDirection, 8));
+      .addEventListener('touchmove', throttleWithRAF(handleSwipeDirection), {
+        passive: false,
+      });
   };
 
+  function throttleWithRAF(callback) {
+    let rafId = null;
+
+    return function (...args) {
+      if (rafId === null) {
+        rafId = requestAnimationFrame(() => {
+          callback.apply(this, args);
+          rafId = null;
+        });
+      }
+    };
+  }
+
   document.querySelector('#display').ontouchend = function (event) {
+    document.querySelector('#display').classList.remove('scrollNone');
     var endTime = Date.now();
     var duration = endTime - startTime;
     var shouldSwipe = false;
@@ -888,7 +891,9 @@ window.onload = function () {
 
     document
       .querySelector('#display')
-      .removeEventListener('touchmove', handleSwipeDirection);
+      .addEventListener('touchmove', throttleWithRAF(handleSwipeDirection), {
+        passive: false,
+      });
     isSwiping = false;
   };
 
@@ -897,33 +902,33 @@ window.onload = function () {
       !document.querySelector('.main_chat_window').classList.contains('swipe')
     )
       return;
-    var currentTime = Date.now();
-    var duration = currentTime - startTime;
 
     currentX = event.changedTouches[0].clientX;
     currentY = event.changedTouches[0].clientY;
     deltaX = currentX - startX;
     deltaY = currentY - startY;
-
     if (!isSwiping) {
       if (Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
         isSwiping = true;
         document.querySelector('#display').classList.add('swipe');
+        startX = currentX;
+        startY = currentY;
+        deltaX = 0;
+        deltaY = 0;
       } else if (Math.abs(deltaY) > Math.abs(deltaX) * 1.5) {
         document.querySelector('.main_chat_window').classList.remove('swipe');
         return;
       }
     }
 
-    if (isSwiping && deltaX > 0) {
+    if (isSwiping) {
       if (event.cancelable) event.preventDefault();
+      document.querySelector('#display').classList.add('scrollNone');
       document.querySelector('.choose_list').classList.remove('swiped');
-      var velocity = Math.abs(deltaX) / Math.max(duration, 1);
-      var extraMargin = velocity * 10;
       textareaElement.blur();
       document.documentElement.style.setProperty(
         '--swipe-margin',
-        `${deltaX + extraMargin}px`
+        `${Math.max(0, deltaX)}px`
       );
     }
   }
@@ -1183,7 +1188,7 @@ window.onload = function () {
         }/socket-server/user/${document.querySelector('#username_id').value}/`;
         chatSocket_user = new WebSocket(url_user);
 
-        chatSocket_user.onopen = function () {};
+        chatSocket_user.onopen = function (e) {};
 
         chatSocket_user.onmessage = function (e) {
           let data = JSON.parse(e.data);
@@ -1722,9 +1727,10 @@ window.onload = function () {
         };
 
         chatSocket_user.onclose = function (e) {
+          console.log(e.code);
           console.log(
             'Socket is closed. Reconnect will be attempted in 0.1 second.',
-            e.reason
+            e
           );
           setTimeout(function () {
             connect_user();
@@ -2177,7 +2183,7 @@ window.onload = function () {
         user_contact_name.appendChild(roomLastMessageDate);
       }
 
-      users_list.onmousedown = function (event) {
+      users_list.onmousedown = function chatOpen(event) {
         scroll_more = 0;
 
         event.preventDefault();
@@ -2374,29 +2380,61 @@ window.onload = function () {
   }
 
   function mes_reaction(mes_react_id) {
-    if (
-      !all_messages[mes_react_id]
-        .querySelector('#reaction_span')
-        .classList.contains('active')
-    ) {
-      all_messages[mes_react_id]
-        .querySelector('#reaction_span')
-        .classList.add('active');
-      all_messages[mes_react_id].querySelector(
-        '#stellar_particles'
-      ).style.display = 'unset';
-      setTimeout(function () {
-        all_messages[mes_react_id].querySelector(
-          '#stellar_particles'
-        ).style.display = 'none';
+    const msg = all_messages[mes_react_id];
+    const reaction = msg.querySelector('#reaction_span');
+    const particles = msg.querySelector('#stellar_particles');
+
+    if (particles._animationTimer) {
+      clearTimeout(particles._animationTimer);
+    }
+    if (particles._hideTimer) {
+      clearTimeout(particles._hideTimer);
+    }
+
+    function updateFixedPosition() {
+      const container = document.querySelector('.main_chat_window');
+      const containerRect = container.getBoundingClientRect();
+      const parentRect = reaction.getBoundingClientRect();
+
+      const centerX =
+        parentRect.left - containerRect.left + parentRect.width / 2;
+      const centerY =
+        parentRect.top - containerRect.top + parentRect.height / 2;
+
+      particles.style.left = centerX - particles.offsetWidth / 2 + 'px';
+      particles.style.top = centerY - particles.offsetHeight / 2 + 'px';
+    }
+
+    if (!reaction.classList.contains('active')) {
+      reaction.classList.add('active');
+      particles.style.display = 'block';
+
+      document
+        .querySelector('#display')
+        .addEventListener('scroll', updateFixedPosition);
+      window.addEventListener('resize', updateFixedPosition);
+      updateFixedPosition();
+      requestAnimationFrame(() => {
+        particles.classList.add('active');
+      });
+
+      particles._animationTimer = setTimeout(() => {
+        particles.classList.remove('active');
+
+        particles._hideTimer = setTimeout(() => {
+          particles.style.display = 'none';
+          delete particles._animationTimer;
+          delete particles._hideTimer;
+        }, 500);
       }, 1500);
     } else {
-      all_messages[mes_react_id]
-        .querySelector('#reaction_span')
-        .classList.remove('active');
-      all_messages[mes_react_id].querySelector(
-        '#stellar_particles'
-      ).style.display = 'none';
+      reaction.classList.remove('active');
+      particles.classList.remove('active');
+
+      particles._hideTimer = setTimeout(() => {
+        particles.style.display = 'none';
+        delete particles._hideTimer;
+      }, 500);
     }
   }
 
@@ -2703,8 +2741,13 @@ window.onload = function () {
 
       stellar_particles = document.createElement('img');
       stellar_particles.setAttribute('id', 'stellar_particles');
-      stellar_particles.src =
+      url =
         '//' + window.location.host + '/static/Images/stellar_particles.gif';
+      // url =
+      //   '//' +
+      //   window.location.host +
+      //   '/static/Images/ba22df081398487fb3599e23fbacaa5b.webm';
+      stellar_particles.src = url;
 
       if (response.messages[key].liked == true) {
         liked.style.display = 'unset';
@@ -2730,7 +2773,12 @@ window.onload = function () {
 
       time_left = document.createElement('span');
       time_left.classList.add('time-left');
-      time_left.textContent = response.messages[key].date.slice(11, 16);
+      const timeString = response.messages[key].date.slice(11, 16);
+      const [hours, minutes] = timeString.split(':');
+      let hour = parseInt(hours);
+      const ampm = hour >= 12 ? 'PM' : 'AM';
+      hour = hour % 12 || 12;
+      time_left.textContent = `${hour}:${minutes} ${ampm}`;
 
       reaction_span.setAttribute('id', 'reaction_span');
       reaction_span.appendChild(liked_div);
@@ -2749,7 +2797,7 @@ window.onload = function () {
         });
       });
 
-      elements.forEach((el) => ro.observe(el));
+      // elements.forEach((el) => ro.observe(el));
 
       message_div_temp_separator = document.createElement('div');
       message_div_temp_separator.classList.add('message_div_temp_separator');
@@ -2895,7 +2943,7 @@ window.onload = function () {
           clearTimeout(modalTimer);
           touchTimer = null;
           modalTimer = null;
-          themeMeta.content = '#050505';
+          // themeMeta.content = '#050505';
         }
       });
 
@@ -3861,9 +3909,11 @@ window.onload = function () {
 
   $('textarea').on('input', function () {
     if (this.value.length == 0) {
+      textAreaPlaceHolder.classList.remove('input');
       document.querySelector('#selfie').classList.remove('hidden');
     } else {
       document.querySelector('#selfie').classList.add('hidden');
+      textAreaPlaceHolder.classList.add('input');
     }
     this.style.height = 0;
     this.style.height = this.scrollHeight + 'px';
@@ -4251,6 +4301,8 @@ window.onload = function () {
 
   document.querySelector('.search_field').oninput = function () {
     if ($('.search_field').val().replace(/\s/g, '').length) {
+      if (!searchDivPlaceHolder.classList.contains('input'))
+        searchDivPlaceHolder.classList.add('input');
       //                document.querySelector(".users_search").setAttribute("style", "display: flex");
       if (chatSocket_user != null && chatSocket_user.readyState) {
         document.documentElement.style.setProperty('--rooms_display', `none`);
@@ -4258,6 +4310,8 @@ window.onload = function () {
       }
     } else {
       //   document.documentElement.style.setProperty('--rooms_display', `flex`);
+      if (searchDivPlaceHolder.classList.contains('input'))
+        searchDivPlaceHolder.classList.remove('input');
       document
         .querySelectorAll('.users_full_form.search')
         .forEach(function (e) {
@@ -4493,7 +4547,7 @@ window.onload = function () {
         '--attachment_tabs_font',
         `${main_color}`
       );
-      themeMeta.content = '#000000';
+      // themeMeta.content = '#000000';
       document
         .querySelector('.settings')
         .setAttribute('style', 'background: #222;');
@@ -4894,8 +4948,9 @@ function adapt() {
       .setAttribute('style', 'display: flex;');
   }
   if (vw > 1700) {
-    // document.querySelector(".main_chat_window").setAttribute("style","width: 1200;");
-    document.querySelector('.main_chat_window').style.width = '1200px';
+    document
+      .querySelector('.main_chat_window')
+      .setAttribute('style', 'width: 1200;');
     document
       .querySelector('.choose_list')
       .setAttribute('style', 'max-width: 400;');
@@ -4926,16 +4981,21 @@ jQuery(function ($) {
 
     var initPos = $self.css('position'),
       offs = $self.offset(),
-      x = e.pageX - offs.left,
-      y = e.pageY - offs.top,
-      dia = Math.min(this.offsetHeight, this.offsetWidth, 100), // start diameter
+      // Для touch событий
+      touch =
+        e.originalEvent && e.originalEvent.touches
+          ? e.originalEvent.touches[0]
+          : e,
+      x = touch.pageX - offs.left,
+      y = touch.pageY - offs.top,
+      dia = Math.min(this.offsetHeight, this.offsetWidth, 100),
       $ripple = $('<div/>', { class: 'ripple', appendTo: $self });
 
     if (!initPos || initPos === 'static') {
       $self.css({ position: 'relative' });
     }
 
-    $('<div/>', {
+    var $wave = $('<div/>', {
       class: 'rippleWave',
       css: {
         background: $self.data('ripple'),
@@ -4945,12 +5005,21 @@ jQuery(function ($) {
         top: y - dia / 2,
       },
       appendTo: $ripple,
-      one: {
-        animationend: function () {
-          $ripple.remove();
-        },
-      },
     });
+
+    // Обработка окончания анимации с несколькими событиями
+    function removeRipple() {
+      $ripple.remove();
+      $wave.off('animationend webkitAnimationEnd oAnimationEnd MSAnimationEnd');
+    }
+
+    $wave.on(
+      'animationend webkitAnimationEnd oAnimationEnd MSAnimationEnd',
+      removeRipple
+    );
+
+    // Fallback таймер на случай если события не сработают
+    setTimeout(removeRipple, 1000);
   });
 });
 
@@ -5430,8 +5499,10 @@ class StaticBackgroundFixedZoom {
   }
 
   resize() {
-    const width = document.documentElement.clientWidth;
-    const height = document.documentElement.clientHeight;
+    const mainChatWindow = document.querySelector('.main_chat_window');
+    // console.log(mainChatWindow.clientWidth);
+    const width = mainChatWindow.clientWidth;
+    const height = mainChatWindow.clientHeight;
 
     const scaleFactor = (window.devicePixelRatio || 1) * this.RENDER_QUALITY;
 

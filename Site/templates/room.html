@@ -18,13 +18,6 @@
       content="black-translucent"
     />
     <link rel="stylesheet" href="{% static 'CSS/room.css' %}" />
-
-    <!-- <meta
-      name="apple-mobile-web-app-status-bar-style"
-      content="black-translucent"
-    /> -->
-    <!-- <meta name="apple-mobile-web-app-status-bar-style" content="black" /> -->
-
     <script src="https://unpkg.com/swup@3.0.2/dist/Swup.umd.js"></script>
     <link
       rel="shortcut icon"
@@ -35,64 +28,15 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
     />
-
-    <!--            <meta charset="utf-8">-->
-    <!--    <title>Custom Right Click Context Menu | CodingNepal</title>-->
-    <!--    <link rel="stylesheet" href="style.css">-->
-    <!--    <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
-    <!--    &lt;!&ndash; Iconscout Link For Icons &ndash;&gt;-->
-    <!--    <link rel="stylesheet" href="https://unicons.iconscout.com/release/v4.0.0/css/line.css">-->
     <script
       src="https://code.jquery.com/jquery-3.1.1.min.js"
       integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
       crossorigin="anonymous"
     ></script>
-    <!-- <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-    />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta
-      name="apple-mobile-web-app-status-bar-style"
-      content="black-translucent"
-    /> -->
   </head>
   <body>
-    <!-- <input class="test_input" /> -->
-    <!--    <img id="copied_image"/>-->
-    <!--        <p style='background-image: url({% static 'Images/room_BG_2.jpg' %})'>-->
-    <!--        <div id="search_list">-->
-    <!--            <input type="texd" id="SEARCH" aria-hidden="Search">-->
-    <!--              <div id="opencontent" class="open-content">-->
-    <!--                {%for value in all_chats%}-->
-    <!--                    {% csrf_token %}-->
-    <!--                    <p><img class="picture" src="{% static 'Images/default_avatar.jpg' %}" alt="avatar">-->
-    <!--                        <input class="users" type="submit" name="users" value="        {{value}}"></p>-->
-    <!--                    {% endfor %}-->
-    <!--              </div>-->
-    <!--        </div>-->
-
-    <!--            <input type="button" onclick="notifSet()" value="Notification">-->
-
-    <!--<div id="select_chat_to_start">-->
-    <!--    Select a chat to start-->
-    <!--</div>-->
-
     <div class="choose_list">
       {% csrf_token %}
-      <!-- <svg width="500" height="300" id="squircles">
-        <path
-          fill="#ED2F5B"
-          stroke="none"
-          d="
-      M 0,150
-      Q 0,0 250,0
-      T 500,150
-        250,300
-        0,150
-    "
-        ></path>
-      </svg> -->
       <div class="search_div" id="search">
         <div class="liquidGlass-effect"></div>
         <div class="liquidGlass-tint"></div>
@@ -471,17 +415,6 @@
               <span class="textarea_placeholder">Message</span>
             </div>
 
-            <!-- <div>
-          <svg
-            id="sticker_menu_icon"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 122.88 122.88"
-          >
-            <path
-              d="M45.54,2.1A61.48,61.48,0,1,1,8.25,30.74,61.26,61.26,0,0,1,45.54,2.1ZM30.61,70.3a38,38,0,0,0,8.34,8,40.39,40.39,0,0,0,23.58,7.1A38.05,38.05,0,0,0,85.3,77.68a33.56,33.56,0,0,0,7.08-7.42.22.22,0,0,1,.3-.06L95,72.49a.21.21,0,0,1,0,.27A43.47,43.47,0,0,1,81.7,87.08a35.7,35.7,0,0,1-19,6,36.82,36.82,0,0,1-19.53-5.25A47.5,47.5,0,0,1,27.87,72.9a.23.23,0,0,1,0-.27l2.38-2.36a.22.22,0,0,1,.3,0l0,0ZM76.23,33.89c4.06,0,7.35,4.77,7.35,10.65s-3.29,10.64-7.35,10.64-7.35-4.77-7.35-10.64,3.29-10.65,7.35-10.65Zm-29.58,0c4.06,0,7.35,4.77,7.35,10.65s-3.29,10.64-7.35,10.64S39.3,50.41,39.3,44.54s3.29-10.65,7.35-10.65Zm42.1-19.75A54.64,54.64,0,1,0,114.18,47.3,54.46,54.46,0,0,0,88.75,14.14Z"
-            />
-          </svg>
-        </div> -->
             <div id="selfie" style="display: none">
               <input
                 type="file"
@@ -495,15 +428,10 @@
               </svg>
             </div>
             <div class="input_submit">
-              <!-- <object
-            class="send_svg"
-            data="{% static 'SVG/send_phone.svg' %}"
-          ></object> -->
               <svg class="send_svg">
                 <use href="#send-phone"></use>
               </svg>
             </div>
-            <!--                        <img src="{% static 'Images/stellar_particles.gif' %}"/>-->
           </form>
         </div>
       </div>
@@ -604,7 +532,7 @@
       </div>
     </div>
   </body>
-  <script src="{% static 'JS/room.js' %}"></script>
+  <!-- <script src="{% static 'JS/room.js' %}"></script> -->
 </html>
 
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none">
@@ -688,48 +616,4 @@
       d="M3,9A1,1,0,0,0,4,8V5A1,1,0,0,1,5,4H8A1,1,0,0,0,8,2H5A3,3,0,0,0,2,5V8A1,1,0,0,0,3,9ZM8,20H5a1,1,0,0,1-1-1V16a1,1,0,0,0-2,0v3a3,3,0,0,0,3,3H8a1,1,0,0,0,0-2ZM12,8a4,4,0,1,0,4,4A4,4,0,0,0,12,8Zm0,6a2,2,0,1,1,2-2A2,2,0,0,1,12,14ZM19,2H16a1,1,0,0,0,0,2h3a1,1,0,0,1,1,1V8a1,1,0,0,0,2,0V5A3,3,0,0,0,19,2Zm2,13a1,1,0,0,0-1,1v3a1,1,0,0,1-1,1H16a1,1,0,0,0,0,2h3a3,3,0,0,0,3-3V16A1,1,0,0,0,21,15Z"
     ></path>
   </symbol>
-</svg>
-
-<svg width="0" height="0">
-  <filter id="pageBulge">
-    <feImage
-      result="map"
-      xlink:href="data:image/svg+xml;utf8,
-          <svg xmlns='http://www.w3.org/2000/svg' width='1920' height='1080'>
-            <radialGradient id='grad' cx='50%' cy='85%' r='60%'>
-              <stop offset='0%' stop-color='rgb(255,255,255)'/>
-              <stop offset='30%' stop-color='rgb(220,220,220)'/>
-              <stop offset='70%' stop-color='rgb(160,160,160)'/>
-              <stop offset='100%' stop-color='rgb(128,128,128)'/>
-            </radialGradient>
-            <rect width='1920' height='1080' fill='url(%23grad)'/>
-          </svg>"
-    />
-    <feDisplacementMap
-      in="SourceGraphic"
-      in2="map"
-      scale="30"
-      xChannelSelector="R"
-      yChannelSelector="G"
-    >
-      <animate
-        id="scaleDown"
-        attributeName="scale"
-        from="30"
-        to="0"
-        dur="0.3s"
-        fill="freeze"
-        begin="indefinite"
-      />
-      <animate
-        id="scaleUp"
-        attributeName="scale"
-        from="0"
-        to="30"
-        dur="0.3s"
-        fill="freeze"
-        begin="indefinite"
-      />
-    </feDisplacementMap>
-  </filter>
 </svg>

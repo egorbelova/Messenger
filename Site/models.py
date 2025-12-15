@@ -9,21 +9,24 @@ from .managers import CustomUserManager
 import hashlib
 from binascii import hexlify
 import os
-from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from django.dispatch import receiver
+from django.db.models.signals import post_save
+from polymorphic.models import PolymorphicModel
+
+
 
 
 class Room(models.Model):
 
-    ROOM_TYPES = [
-        ('D', 'DIALOG'),
-        ('G', 'GROUP'),
-        ('C', 'CHANNEL'),
-    ]
+    class RoomType(models.TextChoices):
+        DIALOG = 'D', 'DIALOG'
+        GROUP = 'G', 'GROUP' 
+        CHANNEL = 'C', 'CHANNEL'
 
     name = models.CharField(max_length=255, null=True, blank=True)
     users = models.ManyToManyField("CustomUser", related_name="users")
-    room_type = models.CharField(max_length=1, choices=ROOM_TYPES, default='D')
+    room_type = models.CharField(max_length=255, choices=RoomType.choices, default='D')
     image = models.ImageField(max_length=255, null=True, upload_to='images/', blank=True)
 
     class Meta:
@@ -35,18 +38,8 @@ class Room(models.Model):
 
 class CustomUser(AbstractUser):
     email = models.EmailField(_('email address'), unique=True)
-    username = models.TextField(max_length=100, unique=False, null=True)
-    image = models.ImageField(max_length=255, null=True, upload_to='images/', blank=True)
+    username = models.CharField(max_length=64, unique=False, null=True)
     rooms = models.ManyToManyField(Room, blank=True)
-
-
-    def clean_password2(self):
-        password1 = self.cleaned_data['password1']
-        password2 = self.cleaned_data['password2']
-
-        if password1 and password2 and password1 != password2:
-            raise ValidationError("Password don't match")
-        return password2
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
@@ -55,6 +48,121 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return self.email
+    
+from django.utils import timezone
+from PIL import Image, ImageOps
+import os
+from django.core.files.base import ContentFile
+from io import BytesIO
+
+
+class Profile(models.Model):
+    user = models.OneToOneField(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name='profile'
+    )
+
+    last_seen = models.DateTimeField(null=True, blank=True)
+    bio = models.TextField(max_length=500, blank=True)
+    phone = models.CharField(max_length=20, blank=True)
+    date_of_birth = models.DateField(null=True, blank=True)
+    location = models.CharField(max_length=100, blank=True)
+
+    def update_last_seen(self):
+        self.last_seen = timezone.now()
+        self.save(update_fields=['last_seen'])
+
+
+    def __str__(self):
+        return f"Profile of {self.user.email}"
+
+@receiver(post_save, sender=CustomUser)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        Profile.objects.create(user=instance)
+
+@receiver(post_save, sender=CustomUser)
+def save_user_profile(sender, instance, **kwargs):
+    if hasattr(instance, 'profile'):
+        instance.profile.save()
+
+
+class ProfilePhoto(models.Model):
+    profile = models.ForeignKey(
+        Profile,
+        related_name='photos',
+        on_delete=models.CASCADE
+    )
+
+    image = models.ImageField(
+        upload_to='profiles/',
+        null=True,
+        blank=True
+    )
+
+    small = models.ImageField(
+        upload_to='profiles/thumbnails/small/',
+        null=True,
+        blank=True
+    )
+    medium = models.ImageField(
+        upload_to='profiles/thumbnails/medium/',
+        null=True,
+        blank=True
+    )
+
+    is_active = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        if self.image:
+            self.generate_thumbnails()
+
+    def generate_thumbnails(self):
+        self.image.open()
+        img = Image.open(self.image)
+
+        img = ImageOps.exif_transpose(img)
+        if img.mode in ('RGBA', 'LA', 'P'):
+            img = img.convert('RGB')
+
+        sizes = {
+            'small': (180, 180),
+            'medium': (640, 640)
+        }
+
+        update_fields = []
+
+        base_name = os.path.splitext(os.path.basename(self.image.name))[0]
+
+        for field_name, size in sizes.items():
+            thumb = ImageOps.fit(img, size, Image.Resampling.LANCZOS)
+
+            thumb_io = BytesIO()
+            thumb.save(
+                thumb_io,
+                format='WEBP',
+                quality=80 if field_name == 'medium' else 60
+            )
+            thumb_io.seek(0)
+
+            filename = f'{base_name}_{field_name}.webp'
+            getattr(self, field_name).save(
+                filename,
+                ContentFile(thumb_io.read()),
+                save=False
+            )
+            thumb_io.close()
+            update_fields.append(field_name)
+
+        super().save(update_fields=update_fields)
+
+    def __str__(self):
+        return f"Photo for {self.profile.user.email}"
 
 
 # class RegisterForm(CustomUser):
@@ -79,18 +187,10 @@ class CustomUser(AbstractUser):
 #         fields = ('first_name',)
 
 
-class File(models.Model):
-    file = models.FileField(max_length=255, null=True, blank=True, upload_to='images/')
+import subprocess
+import os
+from django.core.files.base import File
 
-    def get_absolute_url(self):
-        return f'/person/{self.name}/'
-
-
-class FileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = File
-        fields = "__all__"
-        read_only_fields = ["file"]
 
 
 class Sticker(models.Model):
@@ -106,74 +206,299 @@ class StickerCollection(models.Model):
 
     def __str__(self):
         return self.name
+    
+class DataMixin:
+    def get_user_context(self, **kwargs):
+        context = kwargs
+        return context
+    
+    
+# from .utils.url import build_url
+
+
+class File(PolymorphicModel):
+    file = models.FileField(max_length=255, null=True, blank=True)
+    name = models.CharField(max_length=255, blank=True, null=True)
+    original_name = models.CharField(max_length=255, blank=True, null=True)
+    extension = models.CharField(max_length=10, blank=True, null=True)
+    category = models.CharField(max_length=20, blank=True, null=True)
+    file_size = models.BigIntegerField(default=0)
+    uploaded_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ['-uploaded_at']
+
+    def save(self, *args, **kwargs):
+        if self.file:
+            if not self.original_name:
+                self.original_name = os.path.basename(self.file.name)
+            if not self.name:
+                self.name = os.path.basename(self.file.name)
+            if not self.extension:
+                self.extension = os.path.splitext(self.original_name)[1].lower()
+            if not self.file_size and self.file.size:
+                self.file_size = self.file.size
+            if not self.category:
+                self.category = self.determine_category(self.extension)
+        super().save(*args, **kwargs)
+
+    def determine_category(self, ext: str) -> str:
+        ext = ext.lower()
+        if ext in ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.ico', '.svg', '.tiff']:
+            return 'image'
+        if ext in ['.mp4', '.mov', '.avi', '.webm', '.mkv', '.mpeg', '.flv', '.m4v']:
+            return 'video'
+        if ext in ['.mp3', '.wav', '.ogg', '.flac', '.m4a']:
+            return 'audio'
+        if ext in ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt']:
+            return 'document'
+        return 'other'
+
+    def __str__(self):
+        return self.original_name or self.name or f"File {self.id}"
+
+
+from PIL import Image
+from io import BytesIO
+from django.core.files.base import ContentFile
+import os
+
+class ImageFile(File):
+    width = models.PositiveIntegerField(null=True, blank=True)
+    height = models.PositiveIntegerField(null=True, blank=True)
+    thumbnail_small = models.ImageField(max_length=255, blank=True, null=True, upload_to='thumbnails/small/')
+    thumbnail_medium = models.ImageField(max_length=255, blank=True, null=True, upload_to='thumbnails/medium/')
+    dominant_color = models.CharField(max_length=7, blank=True, null=True)
+
+    def get_average_color(self, img: Image.Image) -> str:
+        img_small = img.resize((1, 1))
+        pixel = img_small.getpixel((0, 0))
+        r, g, b = pixel[:3]
+        return f"#{r:02x}{g:02x}{b:02x}"
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if self.file:
+            try:
+                img = Image.open(self.file)
+                self.width, self.height = img.size
+                self.dominant_color = self.get_average_color(img)
+                self.generate_thumbnails(img)
+                super().save(update_fields=['width', 'height', 'dominant_color', 'thumbnail_small', 'thumbnail_medium'])
+            except Exception as e:
+                print(f"Image processing failed: {e}")
+
+    def generate_thumbnails(self, img: Image.Image):
+        # --- Small thumbnail ---
+        thumb_small = img.copy()
+        thumb_small.thumbnail((75, 75))
+        thumb_small_io = BytesIO()
+        thumb_small.save(
+            thumb_small_io,
+            format='WEBP',
+            lossless=False,
+            quality=50,
+        )
+        self.thumbnail_small.save(
+            f"small_{os.path.basename(self.file.name)}.webp",
+            ContentFile(thumb_small_io.getvalue()),
+            save=False
+        )
+
+        # --- Medium thumbnail ---
+        thumb_medium = img.copy()
+        thumb_medium.thumbnail((800, 800))
+        thumb_medium_io = BytesIO()
+        thumb_medium.save(
+            thumb_medium_io,
+            format='WEBP',
+            lossless=False,
+            quality=80,
+        )
+        self.thumbnail_medium.save(
+            f"medium_{os.path.basename(self.file.name)}.webp",
+            ContentFile(thumb_medium_io.getvalue()),
+            save=False
+        )
+
+
+
+import subprocess
+
+class VideoFile(File):
+    width = models.PositiveIntegerField(null=True, blank=True)
+    height = models.PositiveIntegerField(null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        if self.file and (self.width is None or self.height is None):
+            try:
+                cmd = [
+                    'ffprobe', '-v', 'error',
+                    '-select_streams', 'v:0',
+                    '-show_entries', 'stream=width,height',
+                    '-of', 'csv=s=x:p=0',
+                    self.file.path
+                ]
+                output = subprocess.check_output(cmd).decode().strip()
+                w, h = map(int, output.split('x'))
+                self.width, self.height = w, h
+
+                super().save(update_fields=['width', 'height'])
+            except Exception as e:
+                print(f"Video processing failed for {self.file.name}: {e}")
+
+
+    
+class MessageReaction(models.Model):
+    REACTION_TYPES = [
+        ('like', '👍'),
+        ('heart', '❤️'),
+        ('laugh', '😂'),
+        ('wow', '😮'),
+        ('sad', '😢'),
+        ('angry', '😠'),
+        ('fire', '🔥'),
+        ('clap', '👏'),
+    ]
+    
+    message = models.ForeignKey("Message", on_delete=models.CASCADE, related_name="message_reactions")
+    user = models.ForeignKey("CustomUser", on_delete=models.CASCADE, related_name="user_reactions")
+    reaction_type = models.CharField(max_length=10, choices=REACTION_TYPES, default='like')
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ['message', 'user']
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.get_reaction_type_display()} on message {self.message.id}"
 
 
 class Message(models.Model):
     value = models.TextField(max_length=10000, null=True)
     date = models.DateTimeField(default=datetime.now, blank=True)
-    user = models.ForeignKey("CustomUser", blank=True, related_name="user", on_delete=models.PROTECT)
-    room = models.ForeignKey("Room", blank=True, related_name="room", on_delete=models.CASCADE)
-    file = models.ManyToManyField("File", blank=True, related_name="files")
-    viewed = models.ManyToManyField("CustomUser", blank=True, related_name="viewed")
-    liked = models.IntegerField(default=0)
-    allowed_users = models.ManyToManyField("CustomUser", blank=True)
-    forwarded = models.ForeignKey("CustomUser", blank=True, related_name="forwarded", on_delete=models.PROTECT, null=True)
+    user = models.ForeignKey("CustomUser", blank=True, related_name="sent_messages", on_delete=models.PROTECT)
+    room = models.ForeignKey("Room", blank=True, related_name="messages", on_delete=models.CASCADE)
+    file = models.ManyToManyField("File", blank=True, related_name="messages")
+    reply_to = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="replies"
+    )
+    
+    viewed_by = models.ManyToManyField(
+        "CustomUser",
+        through="MessageRecipient",
+        through_fields=('message', 'user'),
+        related_name="viewed_messages",
+        blank=True
+    )
+    
+    forwarded = models.ForeignKey("CustomUser", blank=True, related_name="forwarded_messages", on_delete=models.PROTECT, null=True)
+    
+    is_deleted = models.BooleanField(default=False)
+    edit_date = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        ordering = ['id']
+        ordering = ['-date']
+
+    @property
+    def reactions(self):
+        return self.message_reactions.all()
+
+    @property
+    def reaction_summary(self):
+        from django.db.models import Count
+        return dict(
+            self.message_reactions.values('reaction_type')
+            .annotate(count=Count('id'))
+            .values_list('reaction_type', 'count')
+        )
+
+    @property
+    def total_reactions(self):
+        return self.message_reactions.count()
+
+    @property
+    def view_count(self):
+        return self.recipients.filter(
+            read_date__isnull=False
+        ).exclude(user=self.user).count()
 
 
-class MessageSerializer(serializers.ModelSerializer):
-    file = FileSerializer(many=True)
+    def is_viewed_by_user(self, user):
+        return self.recipients.filter(user=user, read_date__isnull=False).exists()
 
+
+    def get_user_reaction(self, user):
+        try:
+            return self.message_reactions.get(user=user).reaction_type
+        except MessageReaction.DoesNotExist:
+            return None
+
+    def set_user_reaction(self, user, reaction_type):
+        if reaction_type is None:
+            self.message_reactions.filter(user=user).delete()
+            return None
+        else:
+            reaction, created = MessageReaction.objects.update_or_create(
+                message=self,
+                user=user,
+                defaults={'reaction_type': reaction_type}
+            )
+            return reaction_type
+
+    def mark_as_viewed(self, user):
+        from django.utils import timezone
+        
+        if user == self.user:
+            return None
+
+        recipient, created = MessageRecipient.objects.get_or_create(
+            message=self,
+            user=user
+        )
+
+        if not recipient.read_date:
+            recipient.read_date = timezone.now()
+            recipient.save()
+
+        return recipient
+
+    def get_viewers(self):
+        return CustomUser.objects.filter(
+            message_recipients__message=self,
+            message_recipients__read_date__isnull=False
+        ).exclude(id=self.user_id).distinct()
+
+
+class MessageRecipient(models.Model):
+    message = models.ForeignKey(Message, on_delete=models.CASCADE, related_name="recipients")
+    user = models.ForeignKey("CustomUser", on_delete=models.CASCADE, related_name="message_recipients")
+    
+    is_deleted = models.BooleanField(default=False)
+    read_date = models.DateTimeField(null=True, blank=True)
+    created_date = models.DateTimeField(auto_now_add=True)
+    
     class Meta:
-        model = Message
-        fields = "__all__"
-        read_only_fields = ["value", "file", "forwarded", "allowed_users", "viewed", "room", "user", "date", 'liked']
+        unique_together = ['message', 'user']
+        indexes = [
+            models.Index(fields=['user', 'read_date', 'is_deleted']),
+            models.Index(fields=['message', 'user']),
+        ]
+        ordering = ['-created_date', '-pk']
 
-
-class MessageSerializerRoom(serializers.ModelSerializer):
-    class Meta:
-        model = Message
-        fields = ("viewed", "user")
-        read_only_fields = fields
-
-
-class RoomSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Room
-        fields = ("name", "image", "room_type", "id")
-        read_only_fields = fields
+    def __str__(self):
+        return f"{self.user.username} - {self.message.id}"
 
 
 
 
 
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CustomUser
-        fields = ("id", "email", "username", "image")
-        read_only_fields = fields
-
-
-class RoomSerializerMessage(serializers.ModelSerializer):
-    # room = MessageSerializerRoom(many=True, read_only=True)
-    users = UserSerializer(many=True, read_only=True)
-    # last_message = serializers.Field(source="latest")
-
-    class Meta:
-        model = Room
-        fields = ("name", "users", "room_type", "id", "image")
-        read_only_fields = fields
-
-
-class RoomSerializerContacts(serializers.ModelSerializer):
-    users = UserSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = Room
-        fields = ("users",)
-        read_only_fields = fields
 
 
 class UserSetting(models.Model):

@@ -171,23 +171,6 @@ function go_home_page_func() {
 
 prev_audio_link = '';
 
-// function enableDoubleTap(element, callback) {
-//   let lastTap = 0;
-
-//   element.addEventListener('click', function (event) {
-//     const currentTime = new Date().getTime();
-//     const tapLength = currentTime - lastTap;
-
-//     if (tapLength < 500 && tapLength > 0) {
-//       event.preventDefault();
-//       callback.call(this, event);
-//       lastTap = 0;
-//     } else {
-//       lastTap = currentTime;
-//     }
-//   });
-// }
-
 function enableDoubleTap(element, callback) {
   let lastTap = 0;
   let tapTimeout;
@@ -258,7 +241,6 @@ function enableDoubleTap(element, callback) {
 
 window.addEventListener('beforeunload', (event) => {
   if (window.location.hash) {
-    // event.preventDefault();
     event.returnValue = '';
     return '';
   }
@@ -507,21 +489,15 @@ class SecureTextCoder {
   static #KEY_LENGTH = 256;
   static #ITERATIONS = 100000;
 
-  /**
-   * Безопасное кодирование текста
-   */
   static async encode(plainText, password) {
     if (!plainText || !password) throw new Error('Text and password required');
 
     try {
-      // Генерируем соль и IV
       const salt = crypto.getRandomValues(new Uint8Array(this.#SALT_LENGTH));
       const iv = crypto.getRandomValues(new Uint8Array(this.#IV_LENGTH));
 
-      // Создаем ключ из пароля
       const key = await this.#deriveKey(password, salt);
 
-      // Шифруем
       const encoder = new TextEncoder();
       const data = encoder.encode(plainText);
 
@@ -534,7 +510,6 @@ class SecureTextCoder {
         data
       );
 
-      // Объединяем все компоненты
       const encryptedArray = new Uint8Array(encrypted);
       const result = new Uint8Array(
         salt.length + iv.length + encryptedArray.length
@@ -550,15 +525,11 @@ class SecureTextCoder {
     }
   }
 
-  /**
-   * Безопасное декодирование текста
-   */
   static async decode(encodedText, password) {
     if (!encodedText || !password)
       throw new Error('Encoded text and password required');
 
     try {
-      // Разбираем компоненты
       const data = this.#base64ToArray(encodedText);
 
       const salt = data.subarray(0, this.#SALT_LENGTH);
@@ -568,10 +539,8 @@ class SecureTextCoder {
       );
       const encrypted = data.subarray(this.#SALT_LENGTH + this.#IV_LENGTH);
 
-      // Восстанавливаем ключ
       const key = await this.#deriveKey(password, salt);
 
-      // Дешифруем
       const decrypted = await window.crypto.subtle.decrypt(
         {
           name: this.#ALGORITHM,
@@ -588,9 +557,6 @@ class SecureTextCoder {
     }
   }
 
-  /**
-   * Создание ключа с помощью PBKDF2
-   */
   static async #deriveKey(password, salt) {
     const encoder = new TextEncoder();
     const passwordBuffer = encoder.encode(password);

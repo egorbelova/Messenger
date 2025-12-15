@@ -558,7 +558,7 @@ select {
   justify-content: center;
   height: 40px;
   width: auto;
-  aspect-ratio: 21.74 / 19.2; /* ширина / высота SVG */
+  aspect-ratio: 21.74 / 19.2;
   border-radius: 20px;
   cursor: pointer;
   stroke: none;
@@ -730,7 +730,7 @@ select {
   transition: background 1s;
 
   /* flex: 1; */
-  flex: 0 1 auto; /* не растягивается, но может сжиматься */
+  flex: 0 1 auto;
   height: fit-content;
 }
 
@@ -1134,7 +1134,7 @@ select {
   max-height: 90vh;
   width: auto;
   height: auto;
-  object-fit: contain; /* сохраняет пропорции, вписывая в экран */
+  object-fit: contain;
 }
 
 #media_display {
@@ -1906,11 +1906,9 @@ html.is-animating .transition-fade {
     var(--myColor3, #000000) 100%
   );
 
-  /* SVG как маска */
   -webkit-mask-image: url('../SVG/PATTERNS/pattern-34.svg');
   mask-image: url('../SVG/PATTERNS/pattern-34.svg');
 
-  /* Повторение маски */
   -webkit-mask-repeat: repeat;
   mask-repeat: repeat;
 
@@ -2117,9 +2115,9 @@ img[data-src] {
   /* overflow: hidden; */
   justify-content: flex-start;
   align-items: center;
-  flex: none; /* отключает flex-grow/shrink */
-  align-self: auto; /* сбрасывает выравнивание */
-  order: 0; /* сбрасывает порядок */
+  flex: none;
+  align-self: auto;
+  order: 0;
   /* background-color: rgba(160, 160, 160, 0.3);
   padding: 3px 7px 3px 7px;
   border-radius: 99rem; */
@@ -2205,8 +2203,8 @@ img[data-src] {
   display: flex;
   flex-direction: row;
   /* position: absolute; */
-  margin-top: auto; /* выталкивает вниз */
-  margin-left: auto; /* выталкивает вправо */
+  margin-top: auto;
+  margin-left: auto;
   padding-top: 5px;
   padding-left: 10px;
   gap: 8px;
@@ -4725,18 +4723,16 @@ input[type='range']:focus::-ms-fill-upper {
 }
 
 #gradient-canvas {
-  /* Градиентный слой */
   opacity: 1;
   transition: opacity 0.35s;
 }
 
 #pattern-canvas {
-  /* Паттерн с SVG */
   opacity: 0.4;
-  mix-blend-mode: overlay; /* Можно экспериментировать с blend-mode */
+  mix-blend-mode: overlay;
   transition: opacity 0.35s;
 }
 
 #pattern-canvas {
-  mix-blend-mode: overlay; /* overlay, screen, multiply, soft-light */
+  mix-blend-mode: overlay;
 }

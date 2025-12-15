@@ -1,0 +1,85 @@
+.context-menu {
+  position: absolute;
+  background-color: rgba(30, 30, 30, 0.7);
+  background-color: color-mix(in srgb, rgb(30, 30, 30) 70%, transparent);
+  border: 1px solid #333;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  //   max-width: 200px;
+  width: max-content;
+  overflow: hidden;
+  padding: 6px;
+  backdrop-filter: blur(3px);
+  --scaleOriginX: left;
+  --scaleOriginY: top;
+  transform: scale(0);
+  transform-origin: var(--scaleOriginX) var(--scaleOriginY);
+
+  &__item {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #fff;
+    transition: background-color 0.2s;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    border-radius: 14px;
+    height: 2rem;
+    font-weight: 500;
+    min-width: 11.25rem;
+
+    opacity: 0;
+    animation: itemPop 0.3s forwards;
+
+    &:hover {
+      background-color: rgba(127, 127, 127, 0.3);
+    }
+
+    &--danger {
+      color: #e74c3c;
+    }
+
+    &--icon {
+      height: 1.25rem;
+      width: 1.25rem;
+      margin-right: 1rem;
+      fill: #fff;
+    }
+  }
+
+  &__separator {
+    height: 0.5px;
+    background-color: #555;
+    margin: 4px 12px;
+  }
+  transform: scale(0);
+  opacity: 0;
+  --trans-dur: 0.3s;
+  transition: opacity var(--trans-dur) ease-in-out,
+    transform var(--trans-dur) ease-in-out, filter var(--trans-dur) ease-in-out;
+  filter: blur(5px);
+  &--visible {
+    transform: scale(1);
+    opacity: 1;
+    filter: blur(0px);
+  }
+  &--hiding {
+    opacity: 0;
+    filter: blur(5px);
+  }
+}
+
+@keyframes itemPop {
+  0% {
+    scale: 0;
+    opacity: 0;
+  }
+  100% {
+    scale: 1;
+    opacity: 1;
+  }
+}

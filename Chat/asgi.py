@@ -1,15 +1,19 @@
 import os
+from Site.consumers import ChatConsumer
+from django.urls import re_path
 from django.core.asgi import get_asgi_application
 from channels.routing import ProtocolTypeRouter, URLRouter
-from channels.auth import AuthMiddlewareStack
-import Site.routing
+from Site.middleware import TokenAuthMiddlewareStack
+
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'Chat.settings')
 
+django_asgi_app = get_asgi_application()
+
 application = ProtocolTypeRouter({
-    'https': get_asgi_application(),
-    'websocket': AuthMiddlewareStack(
-        URLRouter(
-            Site.routing.websocket_urlpatterns
-        )
-    )
+    'http': django_asgi_app,
+    'websocket': TokenAuthMiddlewareStack(
+        URLRouter([
+            re_path(r'socket-server/(?P<user_id>\w+)/$', ChatConsumer.as_asgi()),
+        ])
+    ),
 })

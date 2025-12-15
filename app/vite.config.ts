@@ -3,45 +3,21 @@ import react from '@vitejs/plugin-react-swc';
 
 export default defineConfig({
   plugins: [react()],
-  base: '/', // Изменили на корень для dev сервера
-  build: {
-    outDir: '../backend/static', // Собираем статику прямо в Django static папку
-    emptyOutDir: true,
-    chunkSizeWarningLimit: 4000,
-    assetsDir: '.', // Чтобы assets были в корне static
-    rollupOptions: {
-      output: {
-        // Правильно именуем файлы для кэширования
-        entryFileNames: '[name]-[hash].js',
-        chunkFileNames: '[name]-[hash].js',
-        assetFileNames: '[name]-[hash].[ext]',
-      },
-    },
-  },
   server: {
+    host: '0.0.0.0',
+    // host: '192.168.1.68',
     port: 5173,
+    // allowedHosts: ['victoria-kay-capital-provide.trycloudflare.com'],
     proxy: {
-      // Проксируем API запросы к Django
       '/api': {
+        // target: 'http://10.192.220.182:8000',
         target: 'http://localhost:8000',
+        // target: 'http://192.168.1.68:8000',
+        // target: 'http://172.20.10.3:8000',
+        // target: 'http://0.0.0.0:8000',
         changeOrigin: true,
         secure: false,
       },
-      '/accounts': {
-        target: 'http://localhost:8000',
-        changeOrigin: true,
-        secure: false,
-      },
-      '/admin': {
-        target: 'http://localhost:8000',
-        changeOrigin: true,
-        secure: false,
-      },
-    },
-  },
-  resolve: {
-    alias: {
-      '@': '/src', // Для абсолютных импортов
     },
   },
 });

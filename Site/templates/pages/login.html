@@ -74,10 +74,8 @@
         <div id="fieldset_focus"></div>
       </fieldset>
 
-      <!-- Сообщение об ошибке AJAX -->
       <div id="ajax-error"></div>
 
-      <!-- Сообщение об ошибке Django -->
       {% if error %}
       <div class="form-error">{{ error }}</div>
       {% endif %}
@@ -157,17 +155,17 @@
         const errorDiv = document.getElementById('ajax-error');
         const originalText = loginBtn.textContent;
 
-        // Показываем состояние загрузки
+
         loginBtn.textContent = 'Logging in...';
         loginBtn.disabled = true;
         form.classList.add('loading');
         errorDiv.style.display = 'none';
         errorDiv.textContent = '';
 
-        // Собираем данные формы
+
         const formData = new FormData(form);
 
-        // Отправляем AJAX запрос
+
         fetch('{% url "home" %}', {
           method: 'POST',
           body: formData,
@@ -177,7 +175,7 @@
         })
         .then(response => {
           if (response.redirected) {
-            // Если произошел редирект (успешный логин)
+
             window.location.href = response.url;
             return;
           }
@@ -185,14 +183,12 @@
         })
         .then(data => {
           if (data && data.success) {
-            // Успешный логин через AJAX
+
             window.location.reload();
           } else if (data && data.error) {
-            // Показываем ошибку
             errorDiv.textContent = data.error;
             errorDiv.style.display = 'block';
           } else {
-            // Неизвестная ошибка
             errorDiv.textContent = 'Login failed. Please try again.';
             errorDiv.style.display = 'block';
           }
@@ -203,36 +199,30 @@
           errorDiv.style.display = 'block';
         })
         .finally(() => {
-          // Восстанавливаем кнопку
           loginBtn.textContent = originalText;
           loginBtn.disabled = false;
           form.classList.remove('loading');
         });
       }
 
-      // Обработчик клавиши Enter
       function handleEnterKey(e) {
         if (e.key === 'Enter') {
           handleLogin();
         }
       }
 
-      // Инициализация при загрузке страницы
       document.addEventListener('DOMContentLoaded', function() {
         if (!{{ user.is_authenticated|yesno:"true,false" }}) {
           $("#username").attr("spellcheck", "false");
           $("#username").focus();
 
-          // Добавляем обработчики Enter для полей ввода
           document.getElementById('username').addEventListener('keypress', handleEnterKey);
           document.getElementById('password').addEventListener('keypress', handleEnterKey);
         }
       });
 
-      // jQuery версия для совместимости
       $(document).ready(function() {
         if (!{{ user.is_authenticated|yesno:"true,false" }}) {
-          // Дополнительная jQuery логика если нужна
         }
       });
     </script>
