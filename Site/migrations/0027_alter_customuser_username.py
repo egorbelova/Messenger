@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('Site', '0026_remove_profile_image_remove_profile_thumbnail_medium_and_more'),
+        ("Site", "0026_remove_profile_image_remove_profile_thumbnail_medium_and_more"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='customuser',
-            name='username',
+            model_name="customuser",
+            name="username",
             field=models.CharField(max_length=64, null=True),
         ),
     ]

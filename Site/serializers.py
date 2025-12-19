@@ -8,19 +8,26 @@ from .utils.url import build_url
 
 class FileSerializer(serializers.ModelSerializer):
     file_url = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = File
-        fields = ['id', 'file_url', 'extension', 'category', 'original_name', 'file_size', 'uploaded_at']
+        fields = [
+            "id",
+            "file_url",
+            "extension",
+            "category",
+            "original_name",
+            "file_size",
+            "uploaded_at",
+        ]
         read_only_fields = fields
 
-
     def get_file_url(self, obj):
-        request = self.context.get('request')
+        request = self.context.get("request")
         if obj.file:
             return request.build_absolute_uri(obj.file.url) if request else obj.file.url
         return None
-    
+
 
 class ImageFileSerializer(FileSerializer):
     thumbnail_small_url = serializers.SerializerMethodField()
@@ -30,28 +37,42 @@ class ImageFileSerializer(FileSerializer):
     dominant_color = serializers.SerializerMethodField()
 
     class Meta(FileSerializer.Meta):
-        fields = FileSerializer.Meta.fields + ['thumbnail_small_url', 'thumbnail_medium_url', 'width', 'height', 'dominant_color']
+        fields = FileSerializer.Meta.fields + [
+            "thumbnail_small_url",
+            "thumbnail_medium_url",
+            "width",
+            "height",
+            "dominant_color",
+        ]
 
     def get_thumbnail_small_url(self, obj):
-        if getattr(obj, 'thumbnail_small', None):
-            request = self.context.get('request')
-            return request.build_absolute_uri(obj.thumbnail_small.url) if request else obj.thumbnail_small.url
+        if getattr(obj, "thumbnail_small", None):
+            request = self.context.get("request")
+            return (
+                request.build_absolute_uri(obj.thumbnail_small.url)
+                if request
+                else obj.thumbnail_small.url
+            )
         return None
 
     def get_thumbnail_medium_url(self, obj):
-        if getattr(obj, 'thumbnail_medium', None):
-            request = self.context.get('request')
-            return request.build_absolute_uri(obj.thumbnail_medium.url) if request else obj.thumbnail_medium.url
+        if getattr(obj, "thumbnail_medium", None):
+            request = self.context.get("request")
+            return (
+                request.build_absolute_uri(obj.thumbnail_medium.url)
+                if request
+                else obj.thumbnail_medium.url
+            )
         return None
 
     def get_width(self, obj):
-        return getattr(obj, 'width', None)
+        return getattr(obj, "width", None)
 
     def get_height(self, obj):
-        return getattr(obj, 'height', None)
-    
+        return getattr(obj, "height", None)
+
     def get_dominant_color(self, obj):
-        return getattr(obj, 'dominant_color', None)
+        return getattr(obj, "dominant_color", None)
 
 
 class VideoFileSerializer(FileSerializer):
@@ -60,77 +81,142 @@ class VideoFileSerializer(FileSerializer):
     # duration = serializers.SerializerMethodField()
 
     class Meta(FileSerializer.Meta):
-        fields = FileSerializer.Meta.fields + ['width', 'height']
+        fields = FileSerializer.Meta.fields + ["width", "height"]
 
     def get_width(self, obj):
-        return getattr(obj, 'width', None)
+        return getattr(obj, "width", None)
 
     def get_height(self, obj):
-        return getattr(obj, 'height', None)
+        return getattr(obj, "height", None)
 
     # def get_duration(self, obj):
     #     return getattr(obj, 'duration', None)
 
+
+# class ProfilePhotoSerializer(serializers.ModelSerializer):
+#     image = serializers.SerializerMethodField()
+#     small = serializers.SerializerMethodField()
+#     medium = serializers.SerializerMethodField()
+
+#     class Meta:
+#         model = ProfilePhoto
+#         fields = ('id', 'is_active', 'created_at', 'image', 'small', 'medium')
+
+#     def _build_url(self, request, field):
+#         if field:
+#             return request.build_absolute_uri(field.url)
+#         return None
+
+#     def get_image(self, obj):
+#         request = self.context.get('request')
+#         return self._build_url(request, obj.image)
+
+#     def get_small(self, obj):
+#         request = self.context.get('request')
+#         return self._build_url(request, obj.small)
+
+#     def get_medium(self, obj):
+#         request = self.context.get('request')
+#         return self._build_url(request, obj.medium)
+
+
 class ProfilePhotoSerializer(serializers.ModelSerializer):
-    image = serializers.SerializerMethodField()
     small = serializers.SerializerMethodField()
     medium = serializers.SerializerMethodField()
 
     class Meta:
         model = ProfilePhoto
-        fields = ('id', 'is_active', 'created_at', 'image', 'small', 'medium')
-
-    def _build_url(self, request, field):
-        if field:
-            return request.build_absolute_uri(field.url)
-        return None
-
-    def get_image(self, obj):
-        request = self.context.get('request')
-        return self._build_url(request, obj.image)
+        fields = [
+            "id",
+            "small",
+            "medium",
+            "is_active",
+            "is_primary",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at"]
 
     def get_small(self, obj):
-        request = self.context.get('request')
-        return self._build_url(request, obj.small)
+        """Полный URL маленького thumbnail"""
+        if hasattr(obj, "image_thumbnail_small") and obj.image_thumbnail_small:
+            request = self.context.get("request")
+            return request.build_absolute_uri(obj.image_thumbnail_small.url)
+        return None
 
     def get_medium(self, obj):
-        request = self.context.get('request')
-        return self._build_url(request, obj.medium)
+        """Полный URL среднего thumbnail"""
+        if hasattr(obj, "image_thumbnail_medium") and obj.image_thumbnail_medium:
+            request = self.context.get("request")
+            return request.build_absolute_uri(obj.image_thumbnail_medium.url)
+        return None
 
 
+class ProfilePhotoListSerializer(serializers.ModelSerializer):
+    """Легкий сериализатор для списков"""
+
+    thumbnail = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ProfilePhoto
+        fields = ["id", "thumbnail", "is_active", "is_primary"]
+
+    def get_thumbnail(self, obj):
+        request = self.context.get("request")
+        return (
+            request.build_absolute_uri(obj.image_thumbnail_small.url)
+            if obj.image_thumbnail_small
+            else None
+        )
+
+
+class ProfilePhotoCreateSerializer(serializers.ModelSerializer):
+    """Для создания/обновления"""
+
+    is_primary = serializers.BooleanField(write_only=True, required=False)
+
+    class Meta:
+        model = ProfilePhoto
+        fields = ["image", "is_active", "is_primary"]
+
+    def create(self, validated_data):
+        is_primary = validated_data.pop("is_primary", False)
+        profile = self.context["profile"]  # Передается из view
+        photo = ProfilePhoto.objects.create(profile=profile, **validated_data)
+
+        if is_primary:
+            ProfilePhoto.objects.set_primary(profile, photo.id)
+
+        return photo
 
 
 class ProfileSerializer(serializers.ModelSerializer):
-    active_photo = serializers.SerializerMethodField()
+    primary_photo = serializers.SerializerMethodField()
     photos = ProfilePhotoSerializer(many=True, read_only=True)
 
     class Meta:
         model = Profile
         fields = (
-            'last_seen',
-            'bio',
-            'phone',
-            'date_of_birth',
-            'location',
-            'active_photo',
-            'photos'
+            "last_seen",
+            "bio",
+            "phone",
+            "date_of_birth",
+            "location",
+            "primary_photo",
+            "photos",
         )
         read_only_fields = fields
 
-    def get_active_photo(self, obj):
-        active = obj.photos.filter(is_active=True).first()
+    def get_primary_photo(self, obj):
+        active = obj.photos.filter(is_primary=True).first()
         if not active:
             return None
         return ProfilePhotoSerializer(active, context=self.context).data
 
 
-
-
-
-
 class UserSerializer(serializers.ModelSerializer):
     profile = ProfileSerializer(read_only=True)
-    
+
     class Meta:
         model = CustomUser
         fields = ("id", "email", "username", "profile")
@@ -139,8 +225,6 @@ class UserSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         ret = super().to_representation(instance)
         return ret
-
-
 
 
 class MessageSerializer(serializers.ModelSerializer):
@@ -154,166 +238,194 @@ class MessageSerializer(serializers.ModelSerializer):
     view_count = serializers.SerializerMethodField()
     is_viewed = serializers.SerializerMethodField()
     viewers = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = Message
         fields = [
-            'id', 'value', 'date', 'user', 'room', 'files', 
-            'reactions_summary', 'user_reaction', 'is_own', 
-            'is_deleted', 'edit_date', 'forwarded', 'reply_to',
-            'reply_to_message', 'view_count', 'viewed_by', 'is_viewed', 'viewers'
+            "id",
+            "value",
+            "date",
+            "user",
+            "room",
+            "files",
+            "reactions_summary",
+            "user_reaction",
+            "is_own",
+            "is_deleted",
+            "edit_date",
+            "forwarded",
+            "reply_to",
+            "reply_to_message",
+            "view_count",
+            "viewed_by",
+            "is_viewed",
+            "viewers",
         ]
         read_only_fields = fields
 
-
     def get_files(self, obj):
-        request = self.context.get('request')
+        request = self.context.get("request")
         serialized_files = []
 
         for f in obj.file.all():
-            print(f.__class__.__name__, f.id, getattr(f, 'width', None))
+            print(f.__class__.__name__, f.id, getattr(f, "width", None))
             if isinstance(f, ImageFile):
-                serializer = ImageFileSerializer(f, context={'request': request})
+                serializer = ImageFileSerializer(f, context={"request": request})
             elif isinstance(f, VideoFile):
-                serializer = VideoFileSerializer(f, context={'request': request})
+                serializer = VideoFileSerializer(f, context={"request": request})
             # elif isinstance(f, AudioFile):
             #     serializer = AudioFileSerializer(f, context={'request': request})
             else:
-                serializer = FileSerializer(f, context={'request': request})
+                serializer = FileSerializer(f, context={"request": request})
 
             serialized_files.append(serializer.data)
 
         return serialized_files
 
-    
     def get_view_count(self, obj):
         return obj.view_count
-    
+
     def get_is_viewed(self, obj):
-        request = self.context.get('request')
+        request = self.context.get("request")
         if request and request.user.is_authenticated:
             return obj.is_viewed_by_user(request.user)
         return False
 
-    
     def get_reactions_summary(self, obj):
         from collections import Counter
+
         reaction_counts = Counter(
-            reaction.reaction_type 
-            for reaction in obj.message_reactions.all()
+            reaction.reaction_type for reaction in obj.message_reactions.all()
         )
-        
+
         return [
             {
-                'type': reaction_type,
-                'emoji': dict(MessageReaction.REACTION_TYPES).get(reaction_type, '❓'),
-                'count': count
+                "type": reaction_type,
+                "emoji": dict(MessageReaction.REACTION_TYPES).get(reaction_type, "❓"),
+                "count": count,
             }
             for reaction_type, count in reaction_counts.items()
         ]
-    
+
     def get_user_reaction(self, obj):
-        request = self.context.get('request')
+        request = self.context.get("request")
         if request and request.user.is_authenticated:
             try:
                 return obj.message_reactions.get(user=request.user).reaction_type
             except MessageReaction.DoesNotExist:
                 return None
         return None
-    
+
     def get_is_own(self, obj):
-        request = self.context.get('request')
-        if request and hasattr(request, 'user'):
+        request = self.context.get("request")
+        if request and hasattr(request, "user"):
             return obj.user.id == request.user.id
-        
-        user_id = self.context.get('user_id')
+
+        user_id = self.context.get("user_id")
         print(user_id, obj.user.id)
         if user_id:
             return obj.user.id == user_id
-        
+
         return False
-    
+
     def get_reply_to_message(self, obj):
         if obj.reply_to and not obj.reply_to.is_deleted:
             return {
-                'id': obj.reply_to.id,
-                'value': obj.reply_to.value,
-                'user': {
-                    'id': obj.reply_to.user.id,
-                    'username': obj.reply_to.user.username,
+                "id": obj.reply_to.id,
+                "value": obj.reply_to.value,
+                "user": {
+                    "id": obj.reply_to.user.id,
+                    "username": obj.reply_to.user.username,
                 },
-                'date': obj.reply_to.date.isoformat() if obj.reply_to.date else None,
-                'is_deleted': obj.reply_to.is_deleted
+                "date": obj.reply_to.date.isoformat() if obj.reply_to.date else None,
+                "is_deleted": obj.reply_to.is_deleted,
             }
         return None
+
     def get_viewers(self, obj):
-        recipients = obj.recipients.filter(
-            read_date__isnull=False
-        ).exclude(user=obj.user)
+        recipients = obj.recipients.filter(read_date__isnull=False).exclude(
+            user=obj.user
+        )
 
         return MessageRecipientSerializer(
-        recipients,
-        many=True,
-        context=self.context).data
+            recipients, many=True, context=self.context
+        ).data
+
 
 class MessageRecipientSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
 
     class Meta:
         model = MessageRecipient
-        fields = ['user', 'read_date']
+        fields = ["user", "read_date"]
 
     def get_user(self, obj):
-        request = self.context.get('request')
-        return UserSerializer(obj.user, context={'request': request}).data
-    
+        request = self.context.get("request")
+        return UserSerializer(obj.user, context={"request": request}).data
+
 
 class MessageReactionSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
-    
+
     class Meta:
         model = MessageReaction
-        fields = ['id', 'user', 'reaction_type', 'created_at']
+        fields = ["id", "user", "reaction_type", "created_at"]
         read_only_fields = fields
-
 
 
 class RoomListSerializer(serializers.ModelSerializer):
     last_message = serializers.SerializerMethodField()
     unread_count = serializers.SerializerMethodField()
     other_users = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = Room
         fields = [
-            'id', 'name', 'room_type', 'image', 'last_message', 
-            'unread_count', 'other_users', 'updated_at'
+            "id",
+            "name",
+            "room_type",
+            "image",
+            "last_message",
+            "unread_count",
+            "other_users",
+            "updated_at",
         ]
         read_only_fields = fields
-    
+
     def get_last_message(self, obj):
         last_msg = obj.last_message
         if last_msg and not last_msg.is_deleted:
             return {
-                'content': last_msg.value[:100] + '...' if last_msg.value and len(last_msg.value) > 100 else last_msg.value,
-                'date': last_msg.date.isoformat() if hasattr(last_msg.date, 'isoformat') else str(last_msg.date),
-                'user_name': last_msg.user.display_name
+                "content": (
+                    last_msg.value[:100] + "..."
+                    if last_msg.value and len(last_msg.value) > 100
+                    else last_msg.value
+                ),
+                "date": (
+                    last_msg.date.isoformat()
+                    if hasattr(last_msg.date, "isoformat")
+                    else str(last_msg.date)
+                ),
+                "user_name": last_msg.user.display_name,
             }
         return None
-    
+
     def get_unread_count(self, obj):
-        request = self.context.get('request')
+        request = self.context.get("request")
         if request and request.user.is_authenticated:
-            return obj.messages.exclude(viewed_by=request.user).exclude(user=request.user).count()
+            return (
+                obj.messages.exclude(viewed_by=request.user)
+                .exclude(user=request.user)
+                .count()
+            )
         return 0
-    
+
     def get_other_users(self, obj):
-        request = self.context.get('request')
+        request = self.context.get("request")
         if request and request.user.is_authenticated:
             other_users = obj.users.exclude(id=request.user.id)
             return UserSerializer(other_users, many=True).data
         return []
-    
 
 
 class RoomSerializerMessage(serializers.ModelSerializer):
@@ -338,12 +450,12 @@ class RoomSerializerContacts(serializers.ModelSerializer):
 
 # class FileSerializer(serializers.ModelSerializer):
 #     file_url = serializers.SerializerMethodField()
-    
+
 #     class Meta:
 #         model = File
 #         fields = ['id', 'file_url']
 #         read_only_fields = fields
-    
+
 #     def get_file_url(self, obj):
 #         if obj.file:
 #             request = self.context.get('request')
@@ -351,7 +463,6 @@ class RoomSerializerContacts(serializers.ModelSerializer):
 #                 return request.build_absolute_uri(obj.file.url)
 #             return obj.file.url
 #         return None
-
 
 
 class MessageSerializerRoom(serializers.ModelSerializer):

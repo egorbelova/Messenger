@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('Site', '0024_videofile_height_videofile_width'),
+        ("Site", "0024_videofile_height_videofile_width"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='imagefile',
-            name='dominant_color',
+            model_name="imagefile",
+            name="dominant_color",
             field=models.CharField(blank=True, max_length=7, null=True),
         ),
     ]

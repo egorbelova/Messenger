@@ -6,12 +6,12 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('Site', '0004_alter_messagerecipient_options'),
+        ("Site", "0004_alter_messagerecipient_options"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='messagerecipient',
-            options={'ordering': ['pk']},
+            name="messagerecipient",
+            options={"ordering": ["pk"]},
         ),
     ]

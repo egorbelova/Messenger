@@ -1,0 +1,118 @@
+<div id="example" class="no-js-fallback">
+  <!-- JS заменит содержимое -->
+  <script>
+    document.getElementById('example').innerHTML =
+      'Этот текст появится, если JavaScript будет включён.';
+  </script>
+
+  <!-- Красивый fallback без JS -->
+  <noscript>
+    <div class="no-js-message">
+      <div class="no-js-icon">⚠️</div>
+      <h2>JavaScript отключён</h2>
+      <!-- <video
+        src="blue-sky-seen-directly-with-some-clouds_480p.mp4"
+        controls
+      ></video> -->
+      <p>
+        Для корректной работы чата включите JavaScript в настройках браузера.
+      </p>
+      <iframe
+        width="1062"
+        height="597"
+        src="https://www.youtube.com/embed/9bZkp7q19f0"
+        title="PSY - GANGNAM STYLE(강남스타일) M/V"
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        referrerpolicy="strict-origin-when-cross-origin"
+        allowfullscreen
+      ></iframe>
+      <div class="no-js-actions">
+        <a
+          href="https://support.google.com/chrome/answer/114662?hl=ru"
+          target="_blank"
+          class="btn btn-primary"
+        >
+          Включить JS в Chrome
+        </a>
+        <a
+          href="https://support.mozilla.org/ru/kb/vklyuchenie-i-otklyuchenie-javascript"
+          target="_blank"
+          class="btn btn-secondary"
+        >
+          Firefox
+        </a>
+      </div>
+    </div>
+  </noscript>
+</div>
+
+<style>
+  .no-js-fallback {
+    min-height: 200px;
+  }
+
+  .no-js-message {
+    max-width: 500px;
+    margin: 2rem auto;
+    padding: 2rem;
+    text-align: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  }
+
+  .no-js-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+  }
+
+  .no-js-message h2 {
+    font-size: 1.8rem;
+    margin: 0 0 1rem;
+  }
+
+  .no-js-message p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin: 0 0 2rem;
+  }
+
+  .no-js-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    padding: 12px 24px;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+  }
+
+  .btn-primary {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    backdrop-filter: blur(10px);
+  }
+
+  .btn-primary:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+  }
+
+  .btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+  }
+
+  .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+</style>

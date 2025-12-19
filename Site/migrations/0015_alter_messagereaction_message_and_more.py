@@ -8,18 +8,26 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('Site', '0014_message_reply_to'),
+        ("Site", "0014_message_reply_to"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='messagereaction',
-            name='message',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='message_reactions', to='Site.message'),
+            model_name="messagereaction",
+            name="message",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="message_reactions",
+                to="Site.message",
+            ),
         ),
         migrations.AlterField(
-            model_name='messagereaction',
-            name='user',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='user_reactions', to=settings.AUTH_USER_MODEL),
+            model_name="messagereaction",
+            name="user",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="user_reactions",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
     ]

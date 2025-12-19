@@ -17,7 +17,8 @@
   transition: all 0.2s;
   transform: translateX(100%);
   flex-shrink: 0;
-  overflow: scroll;
+  overflow-x: hidden;
+  border-left: 0.5px solid rgba(127, 127, 127, 0.5);
 
   @media screen and (max-width: 768px) {
     width: 100%;
@@ -37,7 +38,8 @@
 }
 
 .header {
-  position: sticky;
+  position: fixed;
+  width: 100%;
   top: 0;
   display: flex;
   justify-content: space-between;
@@ -155,18 +157,6 @@
 }
 
 .sidebar {
-  &__avatar-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    gap: 20px;
-    position: relative;
-    min-height: 100px;
-    margin-top: -20px;
-    flex-shrink: 0;
-  }
-
   &__info {
     display: flex;
     flex-direction: column;
@@ -205,20 +195,37 @@
     text-align: center;
   }
 
-  &__avatar {
-    border-radius: 99rem;
-    height: 70px;
-    width: 70px;
+  --avatar-scaling-duration: 0.3s;
 
+  &__avatar-container {
     display: flex;
     justify-content: center;
     align-items: center;
+    flex-direction: column;
+    transition-duration: var(--avatar-scaling-duration);
+    transition-property: margin-top;
+    gap: 20px;
+    position: relative;
+    min-height: 100px;
+    margin-top: 40px;
+    flex-shrink: 0;
 
-    overflow: hidden;
-    font-family: 'SFProRounded';
-    font-weight: 600;
-    font-size: 1.5rem;
-    transition: scale 0.3s;
+    &--roller {
+      margin-top: 0;
+    }
+  }
+  &__avatar-wrapper {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    max-width: 100%;
+    width: 70px;
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+
+    transition-duration: var(--avatar-scaling-duration);
+    transition-property: scale, width, height, border-radius, transform;
     scale: 1;
 
     &:active {
@@ -231,6 +238,39 @@
       &:active {
         scale: 1.1;
       }
+    }
+
+    &--roller {
+      border-radius: 0;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+
+      &:active {
+        border-radius: 50px;
+        scale: 0.95;
+      }
+    }
+  }
+
+  &__avatar {
+    width: 100%;
+    border-radius: inherit;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    user-select: none;
+    overflow: hidden;
+    font-family: 'SFProRounded';
+    font-weight: 600;
+    font-size: 1.5rem;
+    transition-property: opacity;
+    transition-duration: var(--avatar-scaling-duration);
+    -webkit-user-drag: none;
+    aspect-ratio: 1 / 1;
+
+    &.hidden {
+      opacity: 0;
+      pointer-events: none;
     }
 
     img {

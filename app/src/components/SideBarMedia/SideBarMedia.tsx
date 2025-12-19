@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import ProgressiveImage from '../Message/ProgressiveImage';
 import styles from './SideBarMedia.module.scss';
 import Avatar from '../Avatar/Avatar';
@@ -73,10 +73,16 @@ const SideBarMedia: React.FC<SideBarMediaProps> = ({
   const onInterlocutorEdit = () => setInterlocutorEditVisible(true);
 
   const getDisplayInfo = () => {
+    console.log(selectedChat);
     if (selectedChat.room_type === 'G') {
       return {
         displayName: selectedChat.name || 'Group Chat',
-        imageUrl: selectedChat.image,
+        //@ts-ignore
+        imageSmall: selectedChat.image,
+        //@ts-ignore
+        imageMedium: selectedChat.image,
+        //@ts-ignore
+        photoRoll: [],
         subtitle: `${selectedChat.users.length} members`,
       };
     } else {
@@ -86,13 +92,21 @@ const SideBarMedia: React.FC<SideBarMediaProps> = ({
       return {
         displayName: interlocutor?.username || 'Deleted User',
         //@ts-ignore
-        imageUrl: interlocutor?.profile?.active_photo?.small,
+        imageSmall: interlocutor?.profile?.primary_photo?.small,
+        //@ts-ignore
+        imageMedium: interlocutor?.profile?.primary_photo?.medium,
+
+        photoRoll:
+          //@ts-ignore
+          interlocutor?.profile?.photos?.filter((photo) => !photo.is_primary) ||
+          [],
         subtitle: formatLastSeen(interlocutor!.last_seen),
       };
     }
   };
 
-  const { displayName, imageUrl, subtitle } = getDisplayInfo();
+  const { displayName, imageSmall, imageMedium, photoRoll, subtitle } =
+    getDisplayInfo();
 
   const [value, setValue] = useState(displayName);
 
@@ -102,8 +116,62 @@ const SideBarMedia: React.FC<SideBarMediaProps> = ({
     }
   }, [interlocutorEditVisible, displayName]);
 
+  const [isAvatarRollerOpen, setIsAvatarRollerOpen] = useState(false);
+
+  useEffect(() => {
+    setIsAvatarRollerOpen(false);
+    setRollPosition(0);
+  }, [selectedChat]);
+
+  const sidebarRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!sidebarRef.current || !imageSmall) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      if (e.deltaY > 0 && isAvatarRollerOpen) {
+        setIsAvatarRollerOpen(false);
+        setRollPosition(0);
+      }
+
+      if (
+        e.deltaY < 0 &&
+        sidebarRef.current.scrollTop === 0 &&
+        !isAvatarRollerOpen
+      ) {
+        setIsAvatarRollerOpen(true);
+        setRollPosition(0);
+      }
+    };
+
+    const sidebar = sidebarRef.current;
+    sidebar.addEventListener('wheel', handleWheel, { passive: true });
+
+    return () => {
+      sidebar.removeEventListener('wheel', handleWheel);
+    };
+  }, [isAvatarRollerOpen, selectedChat]);
+
+  const [rollPosition, setRollPosition] = useState(0);
+
+  const handleRollPositionChange = () => {
+    if (interlocutorEditVisible || !isAvatarRollerOpen) return;
+    if (rollPosition === photoRoll!.length) {
+      setRollPosition(0);
+    } else {
+      setRollPosition(rollPosition + 1);
+    }
+  };
+
+  useEffect(() => {
+    setRollPosition(0);
+  }, [interlocutorEditVisible]);
+
   return (
-    <div className={`${styles.sidebar} ${visible ? styles.visible : ''}`}>
+    <div
+      className={`${styles.sidebar} ${visible ? styles.visible : ''}`}
+      ref={sidebarRef}
+    >
       <div className={styles.header}>
         <div
           onClick={interlocutorEditVisible ? onInterlocutorEditBack : onClose}
@@ -126,14 +194,52 @@ const SideBarMedia: React.FC<SideBarMediaProps> = ({
         </div>
       </div>
 
-      <div className={styles['sidebar__avatar-container']}>
-        <Avatar
-          displayName={displayName}
-          imageUrl={imageUrl}
-          className={`${styles['sidebar__avatar']} ${
-            interlocutorEditVisible ? styles['sidebar__avatar--edit'] : ''
+      <div
+        className={`${styles['sidebar__avatar-container']} ${
+          isAvatarRollerOpen && !interlocutorEditVisible
+            ? styles['sidebar__avatar-container--roller']
+            : ''
+        } `}
+      >
+        <div
+          className={`${styles['sidebar__avatar-wrapper']} ${
+            interlocutorEditVisible
+              ? styles['sidebar__avatar-wrapper--edit']
+              : ''
+          } ${
+            isAvatarRollerOpen && !interlocutorEditVisible
+              ? styles['sidebar__avatar-wrapper--roller']
+              : ''
           }`}
-        />
+          style={{ transform: `translateX(${rollPosition * -100}%)` }}
+          onClick={handleRollPositionChange}
+        >
+          <Avatar
+            displayName={displayName}
+            imageUrl={isAvatarRollerOpen ? imageMedium : imageSmall}
+            className={`${styles['sidebar__avatar']}`}
+            onClick={
+              imageSmall && !interlocutorEditVisible
+                ? () => {
+                    setIsAvatarRollerOpen(true);
+                  }
+                : undefined
+            }
+          />
+          {photoRoll &&
+            photoRoll.map((photo, index) => (
+              <Avatar
+                key={index}
+                displayName={displayName}
+                imageUrl={photo.medium}
+                className={`${styles['sidebar__avatar']} ${
+                  isAvatarRollerOpen && !interlocutorEditVisible
+                    ? ''
+                    : styles.hidden
+                }`}
+              />
+            ))}
+        </div>
         <div className={styles['sidebar__info']}>
           <div
             contentEditable={interlocutorEditVisible}
@@ -198,7 +304,7 @@ const SideBarMedia: React.FC<SideBarMediaProps> = ({
                     className={styles.memberAvatar}
                     displayName={member.username}
                     //@ts-ignore
-                    imageUrl={member?.profile?.active_photo?.small || ''}
+                    imageUrl={member?.profile?.primary_photo?.small || ''}
                   />
                   <div className={styles.memberInfo}>
                     <span className={styles.memberName}>{member.username}</span>

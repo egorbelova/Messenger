@@ -7,13 +7,19 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('Site', '0013_remove_message_liked_messagereaction'),
+        ("Site", "0013_remove_message_liked_messagereaction"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='message',
-            name='reply_to',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='replies', to='Site.message'),
+            model_name="message",
+            name="reply_to",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="replies",
+                to="Site.message",
+            ),
         ),
     ]

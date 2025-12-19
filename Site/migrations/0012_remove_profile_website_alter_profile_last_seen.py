@@ -6,17 +6,17 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('Site', '0011_remove_customuser_image_profile'),
+        ("Site", "0011_remove_customuser_image_profile"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='profile',
-            name='website',
+            model_name="profile",
+            name="website",
         ),
         migrations.AlterField(
-            model_name='profile',
-            name='last_seen',
+            model_name="profile",
+            name="last_seen",
             field=models.DateTimeField(blank=True, null=True),
         ),
     ]

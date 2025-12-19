@@ -6,18 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('Site', '0023_alter_imagefile_options_alter_videofile_options_and_more'),
+        ("Site", "0023_alter_imagefile_options_alter_videofile_options_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='videofile',
-            name='height',
+            model_name="videofile",
+            name="height",
             field=models.PositiveIntegerField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='videofile',
-            name='width',
+            model_name="videofile",
+            name="width",
             field=models.PositiveIntegerField(blank=True, null=True),
         ),
     ]

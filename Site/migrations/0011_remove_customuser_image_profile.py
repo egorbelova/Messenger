@@ -8,26 +8,46 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('Site', '0010_alter_messagerecipient_options'),
+        ("Site", "0010_alter_messagerecipient_options"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='customuser',
-            name='image',
+            model_name="customuser",
+            name="image",
         ),
         migrations.CreateModel(
-            name='Profile',
+            name="Profile",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('image', models.ImageField(blank=True, max_length=255, null=True, upload_to='images/')),
-                ('last_seen', models.DateTimeField(auto_now=True)),
-                ('bio', models.TextField(blank=True, max_length=500)),
-                ('phone', models.CharField(blank=True, max_length=20)),
-                ('date_of_birth', models.DateField(blank=True, null=True)),
-                ('website', models.URLField(blank=True)),
-                ('location', models.CharField(blank=True, max_length=100)),
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='profile', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "image",
+                    models.ImageField(
+                        blank=True, max_length=255, null=True, upload_to="images/"
+                    ),
+                ),
+                ("last_seen", models.DateTimeField(auto_now=True)),
+                ("bio", models.TextField(blank=True, max_length=500)),
+                ("phone", models.CharField(blank=True, max_length=20)),
+                ("date_of_birth", models.DateField(blank=True, null=True)),
+                ("website", models.URLField(blank=True)),
+                ("location", models.CharField(blank=True, max_length=100)),
+                (
+                    "user",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="profile",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
     ]

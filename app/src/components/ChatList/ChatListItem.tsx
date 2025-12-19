@@ -53,9 +53,12 @@ const ChatListItem = forwardRef<HTMLFormElement, ChatListItemProps>(
         return chat.image;
       }
       //@ts-ignore
-      if (chatType === 'dialog' && interlocutor?.profile?.active_photo?.small) {
+      if (
+        chatType === 'dialog' &&
+        interlocutor?.profile?.primary_photo?.small
+      ) {
         //@ts-ignore
-        return interlocutor.profile.active_photo.small;
+        return interlocutor.profile.primary_photo.small;
       }
       return null;
     };

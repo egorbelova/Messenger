@@ -7,13 +7,19 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('Site', '0015_alter_messagereaction_message_and_more'),
+        ("Site", "0015_alter_messagereaction_message_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='message',
-            name='viewed_by',
-            field=models.ManyToManyField(blank=True, related_name='viewed_messages', through='Site.MessageRecipient', through_fields=('message', 'user'), to=settings.AUTH_USER_MODEL),
+            model_name="message",
+            name="viewed_by",
+            field=models.ManyToManyField(
+                blank=True,
+                related_name="viewed_messages",
+                through="Site.MessageRecipient",
+                through_fields=("message", "user"),
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
     ]

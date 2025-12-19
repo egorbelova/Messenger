@@ -8,6 +8,7 @@ from channels.middleware import BaseMiddleware
 
 User = get_user_model()
 
+
 @database_sync_to_async
 def get_user(user_id):
     try:
@@ -15,27 +16,28 @@ def get_user(user_id):
     except User.DoesNotExist:
         return AnonymousUser()
 
+
 class TokenAuthMiddlewareStack(BaseMiddleware):
     async def __call__(self, scope, receive, send):
-        headers = dict(scope['headers'])
+        headers = dict(scope["headers"])
         cookies = {}
-        if b'cookie' in headers:
-            cookie_header = headers[b'cookie'].decode()
-            for kv in cookie_header.split(';'):
-                if '=' in kv:
-                    k, v = kv.strip().split('=', 1)
+        if b"cookie" in headers:
+            cookie_header = headers[b"cookie"].decode()
+            for kv in cookie_header.split(";"):
+                if "=" in kv:
+                    k, v = kv.strip().split("=", 1)
                     cookies[k] = v
 
-        access_token = cookies.get('access_token')
+        access_token = cookies.get("access_token")
 
         if access_token:
             try:
                 validated_token = UntypedToken(access_token)
-                user_id = validated_token['user_id']
-                scope['user'] = await get_user(user_id)
+                user_id = validated_token["user_id"]
+                scope["user"] = await get_user(user_id)
             except (InvalidToken, TokenError):
-                scope['user'] = AnonymousUser()
+                scope["user"] = AnonymousUser()
         else:
-            scope['user'] = AnonymousUser()
+            scope["user"] = AnonymousUser()
 
         return await super().__call__(scope, receive, send)

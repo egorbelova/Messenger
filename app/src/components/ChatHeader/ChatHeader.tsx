@@ -28,6 +28,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   }
 
   const getDisplayInfo = () => {
+    console.log(selectedChat);
     if (selectedChat.room_type === 'G') {
       return {
         displayName: selectedChat.name || 'Group Chat',
@@ -41,7 +42,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       return {
         displayName: interlocutor?.username || 'Deleted User',
         //@ts-ignore
-        imageUrl: interlocutor?.profile?.active_photo?.small,
+        imageUrl: interlocutor?.profile?.primary_photo?.small,
         subtitle: formatLastSeen(interlocutor!.last_seen),
       };
     }

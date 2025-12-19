@@ -6,12 +6,12 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('Site', '0002_add_is_deleted_edit_date'),
+        ("Site", "0002_add_is_deleted_edit_date"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='messagerecipient',
-            options={'ordering': ['-created_date']},
+            name="messagerecipient",
+            options={"ordering": ["-created_date"]},
         ),
     ]

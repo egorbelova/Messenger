@@ -3,39 +3,51 @@ from django.contrib.auth.admin import UserAdmin
 from .forms import CustomUserCreationForm, CustomUserChangeForm
 from .models import *
 
+
 class MessageAdmin(admin.ModelAdmin):
-    list_display = ['id', 'value', 'room', 'user', 'date']
-    list_filter = ['room', 'user', 'date']
+    list_display = ["id", "value", "room", "user", "date"]
+    list_filter = ["room", "user", "date"]
 
 
 class ProfileInline(admin.StackedInline):
     model = Profile
     can_delete = False
-    verbose_name_plural = 'Profile'
-    fk_name = 'user'
+    verbose_name_plural = "Profile"
+    fk_name = "user"
+
 
 class CustomUserAdmin(UserAdmin):
     add_form = CustomUserCreationForm
     form = CustomUserChangeForm
     model = CustomUser
     inlines = (ProfileInline,)
-    
-    list_display = ('username', 'email', 'is_staff', 'is_active')
-    list_filter = ('email', 'is_staff', 'is_active')
-    
+
+    list_display = ("username", "email", "is_staff", "is_active")
+    list_filter = ("email", "is_staff", "is_active")
+
     fieldsets = (
-        (None, {'fields': ('username', 'email', 'password', 'rooms')}),
-        ('Permissions', {'fields': ('is_staff', 'is_active')}),
+        (None, {"fields": ("username", "email", "password", "rooms")}),
+        ("Permissions", {"fields": ("is_staff", "is_active")}),
     )
     add_fieldsets = (
-        (None, {
-            'classes': ('wide',),
-            'fields': ('username', 'email', 'password', 'is_staff', 'is_active', 'rooms')}
+        (
+            None,
+            {
+                "classes": ("wide",),
+                "fields": (
+                    "username",
+                    "email",
+                    "password",
+                    "is_staff",
+                    "is_active",
+                    "rooms",
+                ),
+            },
         ),
     )
-    search_fields = ('email',)
-    ordering = ('email',)
-    
+    search_fields = ("email",)
+    ordering = ("email",)
+
     # def get_image(self, obj):
     #     if hasattr(obj, 'profile') and obj.profile.image:
     #         return obj.profile.image.url
@@ -46,7 +58,8 @@ class CustomUserAdmin(UserAdmin):
         if not obj:
             return list()
         return super().get_inline_instances(request, obj)
-    
+
+
 # class FileInline(admin.TabularInline):
 #     model = Message.file.through
 #     extra = 0
@@ -67,7 +80,6 @@ class CustomUserAdmin(UserAdmin):
 # class VideoFileAdmin(admin.ModelAdmin):
 #     list_display = ['id', 'original_name', 'category', 'file_size']
 #     readonly_fields = ['width', 'height']
-
 
 
 admin.site.register(Message, MessageAdmin)

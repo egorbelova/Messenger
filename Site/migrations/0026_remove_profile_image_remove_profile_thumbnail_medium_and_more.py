@@ -7,32 +7,60 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('Site', '0025_imagefile_dominant_color'),
+        ("Site", "0025_imagefile_dominant_color"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='profile',
-            name='image',
+            model_name="profile",
+            name="image",
         ),
         migrations.RemoveField(
-            model_name='profile',
-            name='thumbnail_medium',
+            model_name="profile",
+            name="thumbnail_medium",
         ),
         migrations.RemoveField(
-            model_name='profile',
-            name='thumbnail_small',
+            model_name="profile",
+            name="thumbnail_small",
         ),
         migrations.CreateModel(
-            name='ProfilePhoto',
+            name="ProfilePhoto",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('image', models.ImageField(blank=True, null=True, upload_to='profiles/')),
-                ('small', models.ImageField(blank=True, null=True, upload_to='profiles/thumbnails/small/')),
-                ('medium', models.ImageField(blank=True, null=True, upload_to='profiles/thumbnails/medium/')),
-                ('is_active', models.BooleanField(default=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('profile', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='photos', to='Site.profile')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "image",
+                    models.ImageField(blank=True, null=True, upload_to="profiles/"),
+                ),
+                (
+                    "small",
+                    models.ImageField(
+                        blank=True, null=True, upload_to="profiles/thumbnails/small/"
+                    ),
+                ),
+                (
+                    "medium",
+                    models.ImageField(
+                        blank=True, null=True, upload_to="profiles/thumbnails/medium/"
+                    ),
+                ),
+                ("is_active", models.BooleanField(default=False)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "profile",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="photos",
+                        to="Site.profile",
+                    ),
+                ),
             ],
         ),
     ]

@@ -7,22 +7,28 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('Site', '0022_remove_file_thumbnail_small_and_more'),
-        ('contenttypes', '0002_remove_content_type_name'),
+        ("Site", "0022_remove_file_thumbnail_small_and_more"),
+        ("contenttypes", "0002_remove_content_type_name"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='imagefile',
-            options={'base_manager_name': 'objects'},
+            name="imagefile",
+            options={"base_manager_name": "objects"},
         ),
         migrations.AlterModelOptions(
-            name='videofile',
-            options={'base_manager_name': 'objects'},
+            name="videofile",
+            options={"base_manager_name": "objects"},
         ),
         migrations.AddField(
-            model_name='file',
-            name='polymorphic_ctype',
-            field=models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='polymorphic_%(app_label)s.%(class)s_set+', to='contenttypes.contenttype'),
+            model_name="file",
+            name="polymorphic_ctype",
+            field=models.ForeignKey(
+                editable=False,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="polymorphic_%(app_label)s.%(class)s_set+",
+                to="contenttypes.contenttype",
+            ),
         ),
     ]

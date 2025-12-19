@@ -3,15 +3,16 @@ from django.dispatch import receiver
 from .models import Message, MessageRecipient, Room, CustomUser
 from django.db.models.signals import m2m_changed
 
+
 @receiver(post_save, sender=Message)
 def create_message_recipients(sender, instance, created, **kwargs):
     if created:
         room_users = instance.room.users.all()
         recipients = [
-            MessageRecipient(message=instance, user=user)
-            for user in room_users
+            MessageRecipient(message=instance, user=user) for user in room_users
         ]
         MessageRecipient.objects.bulk_create(recipients)
+
 
 # @receiver(m2m_changed, sender=Room.users.through)
 # def add_existing_messages_to_new_user(sender, instance, action, pk_set, **kwargs):
@@ -35,6 +36,7 @@ from .models import Room, MessageRecipient
 
 User = get_user_model()
 
+
 @receiver(m2m_changed, sender=Room.users.through)
 def add_existing_messages_to_new_user(sender, instance, action, pk_set, **kwargs):
     if action != "post_add":
@@ -44,9 +46,7 @@ def add_existing_messages_to_new_user(sender, instance, action, pk_set, **kwargs
     if not new_users:
         return
 
-    message_ids = list(
-        instance.messages.values_list("id", flat=True)
-    )
+    message_ids = list(instance.messages.values_list("id", flat=True))
 
     if not message_ids:
         return
@@ -85,8 +85,9 @@ def remove_recipients_when_user_leaves_room(sender, instance, action, pk_set, **
     user_ids = list(pk_set)
 
     MessageRecipient.objects.filter(
-        user_id__in=user_ids,
-        message__room=instance
+        user_id__in=user_ids, message__room=instance
     ).delete()
 
-    print(f"[INFO] Removed MessageRecipient for users={user_ids} from room={instance.id}")
+    print(
+        f"[INFO] Removed MessageRecipient for users={user_ids} from room={instance.id}"
+    )

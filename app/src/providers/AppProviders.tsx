@@ -4,6 +4,7 @@ import { MessagesProvider } from '../contexts/MessagesContext';
 import { ChatProvider } from '../contexts/ChatContext';
 import { AudioProvider } from '../contexts/AudioContext';
 import { AuthProvider } from '../contexts/AuthContext';
+import { MediaModalProvider } from '../contexts/MediaModalContext';
 
 interface AppProvidersProps {
   children: React.ReactNode;
@@ -19,6 +20,7 @@ const composeProviders = (
 };
 
 const AppProvidersComponent = composeProviders(
+  MediaModalProvider,
   AuthProvider,
   UserProvider,
   ChatProvider,

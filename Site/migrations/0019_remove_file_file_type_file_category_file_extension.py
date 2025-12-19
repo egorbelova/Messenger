@@ -6,22 +6,22 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('Site', '0018_profile_thumbnail_alter_profile_image'),
+        ("Site", "0018_profile_thumbnail_alter_profile_image"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='file',
-            name='file_type',
+            model_name="file",
+            name="file_type",
         ),
         migrations.AddField(
-            model_name='file',
-            name='category',
+            model_name="file",
+            name="category",
             field=models.CharField(blank=True, max_length=20, null=True),
         ),
         migrations.AddField(
-            model_name='file',
-            name='extension',
+            model_name="file",
+            name="extension",
             field=models.CharField(blank=True, max_length=10, null=True),
         ),
     ]

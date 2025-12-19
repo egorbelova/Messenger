@@ -6,18 +6,22 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('Site', '0020_remove_profile_thumbnail_profile_thumbnail_medium_and_more'),
+        ("Site", "0020_remove_profile_thumbnail_profile_thumbnail_medium_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='file',
-            name='thumbnail_medium',
-            field=models.ImageField(blank=True, max_length=255, null=True, upload_to='thumbnails/medium/'),
+            model_name="file",
+            name="thumbnail_medium",
+            field=models.ImageField(
+                blank=True, max_length=255, null=True, upload_to="thumbnails/medium/"
+            ),
         ),
         migrations.AddField(
-            model_name='file',
-            name='thumbnail_small',
-            field=models.ImageField(blank=True, max_length=255, null=True, upload_to='thumbnails/small/'),
+            model_name="file",
+            name="thumbnail_small",
+            field=models.ImageField(
+                blank=True, max_length=255, null=True, upload_to="thumbnails/small/"
+            ),
         ),
     ]

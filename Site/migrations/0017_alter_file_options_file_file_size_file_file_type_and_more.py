@@ -7,37 +7,37 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('Site', '0016_message_viewed_by'),
+        ("Site", "0016_message_viewed_by"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='file',
-            options={'ordering': ['-uploaded_at']},
+            name="file",
+            options={"ordering": ["-uploaded_at"]},
         ),
         migrations.AddField(
-            model_name='file',
-            name='file_size',
+            model_name="file",
+            name="file_size",
             field=models.BigIntegerField(default=0),
         ),
         migrations.AddField(
-            model_name='file',
-            name='file_type',
+            model_name="file",
+            name="file_type",
             field=models.CharField(blank=True, max_length=100, null=True),
         ),
         migrations.AddField(
-            model_name='file',
-            name='name',
+            model_name="file",
+            name="name",
             field=models.CharField(blank=True, max_length=255, null=True),
         ),
         migrations.AddField(
-            model_name='file',
-            name='original_name',
+            model_name="file",
+            name="original_name",
             field=models.CharField(blank=True, max_length=255, null=True),
         ),
         migrations.AddField(
-            model_name='file',
-            name='uploaded_at',
+            model_name="file",
+            name="uploaded_at",
             field=models.DateTimeField(default=django.utils.timezone.now),
         ),
     ]
