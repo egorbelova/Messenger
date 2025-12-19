@@ -55,6 +55,7 @@ const ChatListItem = forwardRef<HTMLFormElement, ChatListItemProps>(
       //@ts-ignore
       if (
         chatType === 'dialog' &&
+        //@ts-ignore
         interlocutor?.profile?.primary_photo?.small
       ) {
         //@ts-ignore

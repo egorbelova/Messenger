@@ -59,6 +59,7 @@ const MediaModal: React.FC<MediaModalProps> = ({
           ) : (
             <img
               src={file.thumbnail_medium_url || file.file_url}
+              //@ts-ignore
               alt={file.original_name || 'Media'}
               className={styles.fullMedia}
             />

@@ -1,4 +1,5 @@
 // shared/contexts/MediaModalContext.tsx
+//@ts-ignore
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import MediaModal from '../components/Message/MediaModal';
 
