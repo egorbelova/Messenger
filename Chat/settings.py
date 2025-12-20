@@ -191,27 +191,27 @@ LOGOUT_REDIRECT_URL = "login"
 ASGI_APPLICATION = "Chat.asgi.application"
 WSGI_APPLICATION = "Chat.wsgi.application"
 
-# CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}
+CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}
 
 
 # settings.py
-REDIS_HOST = "localhost"  # для Mac/Windows
-REDIS_PORT = 6379
+# REDIS_HOST = "localhost"  # для Mac/Windows
+# REDIS_PORT = 6379
 
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [(REDIS_HOST, REDIS_PORT)],
-        },
-    },
-}
-CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
-CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/0"
+# CHANNEL_LAYERS = {
+#     "default": {
+#         "BACKEND": "channels_redis.core.RedisChannelLayer",
+#         "CONFIG": {
+#             "hosts": [(REDIS_HOST, REDIS_PORT)],
+#         },
+#     },
+# }
+# CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
+# CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/0"
 
-CELERY_ACCEPT_CONTENT = ["json"]
-CELERY_TASK_SERIALIZER = "json"
-CELERY_RESULT_SERIALIZER = "json"
+# CELERY_ACCEPT_CONTENT = ["json"]
+# CELERY_TASK_SERIALIZER = "json"
+# CELERY_RESULT_SERIALIZER = "json"
 
 
 
