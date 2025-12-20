@@ -40,7 +40,7 @@ export default function ProgressiveImage({
   }, [full]);
 
   return (
-    <div style={{ background: dominant_color }}>
+    <div style={{ background: dominant_color, width: '100%', height: '100%' }}>
       <img
         ref={imgRef}
         src={small}

@@ -91,3 +91,21 @@ def remove_recipients_when_user_leaves_room(sender, instance, action, pk_set, **
     print(
         f"[INFO] Removed MessageRecipient for users={user_ids} from room={instance.id}"
     )
+
+
+# signals.py
+import logging
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from .models import ProfileVideo
+from .tasks import compress_video
+
+logger = logging.getLogger(__name__)
+
+@receiver(post_save, sender=ProfileVideo)
+def profile_video_post_save(sender, instance, created, **kwargs):
+    # Запускаем задачу только если файл загружен и видео только создано
+    if created and instance.video and instance.video.name:
+        compress_video.delay(instance.pk)
+        logger.info(f"Scheduled compression for video {instance.pk}")
+

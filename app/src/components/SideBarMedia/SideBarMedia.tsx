@@ -89,24 +89,38 @@ const SideBarMedia: React.FC<SideBarMediaProps> = ({
       const interlocutor = selectedChat.users.find(
         (chatUser) => chatUser.id !== user?.id
       );
+      //@ts-ignore
+      const primaryAvatar = interlocutor?.profile?.primary_avatar;
+
       return {
         displayName: interlocutor?.username || 'Deleted User',
-        //@ts-ignore
-        imageSmall: interlocutor?.profile?.primary_photo?.small,
-        //@ts-ignore
-        imageMedium: interlocutor?.profile?.primary_photo?.medium,
 
-        photoRoll:
-          //@ts-ignore
-          interlocutor?.profile?.photos?.filter((photo) => !photo.is_primary) ||
-          [],
+        primaryMedia:
+          primaryAvatar?.type === 'video'
+            ? primaryAvatar?.url
+            : primaryAvatar?.small || null,
+        secondaryMedia:
+          primaryAvatar?.type === 'video'
+            ? primaryAvatar?.url
+            : primaryAvatar?.medium || null,
+
+        type: primaryAvatar?.type || null,
+        //@ts-ignore
+        mediaRoll: interlocutor?.profile?.media || [],
+
         subtitle: formatLastSeen(interlocutor!.last_seen),
       };
     }
   };
 
-  const { displayName, imageSmall, imageMedium, photoRoll, subtitle } =
-    getDisplayInfo();
+  const {
+    displayName,
+    primaryMedia,
+    secondaryMedia,
+    mediaRoll,
+    type,
+    subtitle,
+  } = getDisplayInfo();
 
   const [value, setValue] = useState(displayName);
 
@@ -125,15 +139,21 @@ const SideBarMedia: React.FC<SideBarMediaProps> = ({
 
   const sidebarRef = React.useRef<HTMLDivElement>(null);
 
+  const [rollPosition, setRollPosition] = useState(0);
+
+  const handleRollPositionChange = () => {
+    if (interlocutorEditVisible || !isAvatarRollerOpen) return;
+    setRollPosition((prev) => (prev === mediaRoll!.length ? 0 : prev + 1));
+  };
+
   useEffect(() => {
-    if (!sidebarRef.current || !imageSmall) return;
+    if (!sidebarRef.current) return;
 
     const handleWheel = (e: WheelEvent) => {
       if (e.deltaY > 0 && isAvatarRollerOpen) {
         setIsAvatarRollerOpen(false);
         setRollPosition(0);
       }
-
       if (
         e.deltaY < 0 &&
         sidebarRef.current.scrollTop === 0 &&
@@ -151,17 +171,6 @@ const SideBarMedia: React.FC<SideBarMediaProps> = ({
       sidebar.removeEventListener('wheel', handleWheel);
     };
   }, [isAvatarRollerOpen, selectedChat]);
-
-  const [rollPosition, setRollPosition] = useState(0);
-
-  const handleRollPositionChange = () => {
-    if (interlocutorEditVisible || !isAvatarRollerOpen) return;
-    if (rollPosition === photoRoll!.length) {
-      setRollPosition(0);
-    } else {
-      setRollPosition(rollPosition + 1);
-    }
-  };
 
   useEffect(() => {
     setRollPosition(0);
@@ -216,29 +225,34 @@ const SideBarMedia: React.FC<SideBarMediaProps> = ({
         >
           <Avatar
             displayName={displayName}
-            imageUrl={isAvatarRollerOpen ? imageMedium : imageSmall}
+            imageUrl={isAvatarRollerOpen ? secondaryMedia : primaryMedia}
             className={`${styles['sidebar__avatar']}`}
+            mediaType={type}
             onClick={
-              imageSmall && !interlocutorEditVisible
+              primaryMedia && !interlocutorEditVisible
                 ? () => {
                     setIsAvatarRollerOpen(true);
                   }
                 : undefined
             }
           />
-          {photoRoll &&
-            photoRoll.map((photo, index) => (
-              <Avatar
-                key={index}
-                displayName={displayName}
-                imageUrl={photo.medium}
-                className={`${styles['sidebar__avatar']} ${
-                  isAvatarRollerOpen && !interlocutorEditVisible
-                    ? ''
-                    : styles.hidden
-                }`}
-              />
-            ))}
+          {mediaRoll &&
+            mediaRoll.map((photo, index) => {
+              const avatarData = getDisplayInfo();
+              return (
+                <Avatar
+                  key={index}
+                  displayName={avatarData.displayName}
+                  imageUrl={photo.url}
+                  mediaType={photo.type}
+                  className={`${styles['sidebar__avatar']} ${
+                    isAvatarRollerOpen && !interlocutorEditVisible
+                      ? ''
+                      : styles.hidden
+                  }`}
+                />
+              );
+            })}
         </div>
         <div className={styles['sidebar__info']}>
           <div

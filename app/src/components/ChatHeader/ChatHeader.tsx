@@ -28,7 +28,6 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   }
 
   const getDisplayInfo = () => {
-    console.log(selectedChat);
     if (selectedChat.room_type === 'G') {
       return {
         displayName: selectedChat.name || 'Group Chat',

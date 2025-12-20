@@ -135,21 +135,60 @@ class ProfilePhotoSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "created_at", "updated_at"]
 
     def get_small(self, obj):
-        """Полный URL маленького thumbnail"""
-        if hasattr(obj, "image_thumbnail_small") and obj.image_thumbnail_small:
-            request = self.context.get("request")
-            return request.build_absolute_uri(obj.image_thumbnail_small.url)
-        return None
+        return self._build_url(obj.image_thumbnail_small)
 
     def get_medium(self, obj):
-        """Полный URL среднего thumbnail"""
-        if hasattr(obj, "image_thumbnail_medium") and obj.image_thumbnail_medium:
-            request = self.context.get("request")
-            return request.build_absolute_uri(obj.image_thumbnail_medium.url)
-        return None
+        return self._build_url(obj.image_thumbnail_medium)
+
+    def _build_url(self, field):
+        request = self.context.get("request")
+        if not field:
+            return None
+        return request.build_absolute_uri(field.url) if request else field.url
+
+
+class ProfileVideoSerializer(serializers.ModelSerializer):
+    url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ProfileVideo
+        fields = [
+            "id",
+            "url",
+            "duration",
+            "is_active",
+            "is_primary",
+            "created_at",
+        ]
+
+    def get_url(self, obj):
+        request = self.context.get("request")
+        return request.build_absolute_uri(obj.video.url) if request else obj.video.url
+
+
+class ProfileVideoCreateSerializer(serializers.ModelSerializer):
+    is_primary = serializers.BooleanField(write_only=True, required=False)
+
+    class Meta:
+        model = ProfileVideo
+        fields = ["video", "is_active", "is_primary"]
+
+    def create(self, validated_data):
+        is_primary = validated_data.pop("is_primary", False)
+        profile = self.context["profile"]
+
+        video = ProfileVideo.objects.create(
+            profile=profile,
+            **validated_data
+        )
+
+        if is_primary:
+            ProfileVideo.objects.set_primary(profile, video.id)
+
+        return video
+
 
 
 class ProfilePhotoListSerializer(serializers.ModelSerializer):
@@ -162,12 +201,16 @@ class ProfilePhotoListSerializer(serializers.ModelSerializer):
         fields = ["id", "thumbnail", "is_active", "is_primary"]
 
     def get_thumbnail(self, obj):
+        if not obj.image_thumbnail_small:
+            return None
+
         request = self.context.get("request")
         return (
             request.build_absolute_uri(obj.image_thumbnail_small.url)
-            if obj.image_thumbnail_small
-            else None
+            if request
+            else obj.image_thumbnail_small.url
         )
+
 
 
 class ProfilePhotoCreateSerializer(serializers.ModelSerializer):
@@ -188,11 +231,22 @@ class ProfilePhotoCreateSerializer(serializers.ModelSerializer):
             ProfilePhoto.objects.set_primary(profile, photo.id)
 
         return photo
+    
+
+class ProfileMediaSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    type = serializers.CharField()
+    small = serializers.CharField(allow_null=True)
+    medium = serializers.CharField(allow_null=True)
+    url = serializers.CharField(allow_null=True)
+    duration = serializers.FloatField(allow_null=True)
+    created_at = serializers.DateTimeField()
+    is_active = serializers.BooleanField()
 
 
 class ProfileSerializer(serializers.ModelSerializer):
-    primary_photo = serializers.SerializerMethodField()
-    photos = ProfilePhotoSerializer(many=True, read_only=True)
+    primary_avatar = serializers.SerializerMethodField()
+    media = serializers.SerializerMethodField()
 
     class Meta:
         model = Profile
@@ -202,16 +256,72 @@ class ProfileSerializer(serializers.ModelSerializer):
             "phone",
             "date_of_birth",
             "location",
-            "primary_photo",
-            "photos",
+            "primary_avatar",
+            "media",
         )
-        read_only_fields = fields
 
-    def get_primary_photo(self, obj):
-        active = obj.photos.filter(is_primary=True).first()
-        if not active:
+    def get_primary_avatar(self, obj):
+        # Сначала ищем явный primary
+        photo = obj.profilephotos.filter(is_primary=True).first()
+        video = obj.profilevideos.filter(is_primary=True).first()
+        primary = photo or video
+
+        # Если нет явного primary, берём последнее добавленное медиа
+        if not primary:
+            last_photo = obj.profilephotos.order_by('-created_at').first()
+            last_video = obj.profilevideos.order_by('-created_at').first()
+            if last_photo and last_video:
+                primary = last_photo if last_photo.created_at > last_video.created_at else last_video
+            else:
+                primary = last_photo or last_video
+
+        if not primary:
             return None
-        return ProfilePhotoSerializer(active, context=self.context).data
+        return self._serialize_media(primary)
+
+    def get_media(self, obj):
+        # Все остальные медиа без primary
+        photos = obj.profilephotos.exclude(is_primary=True)
+        videos = obj.profilevideos.exclude(is_primary=True)
+        all_media = list(photos) + list(videos)
+        # Сортировка по дате добавления
+        all_media.sort(key=lambda x: x.created_at, reverse=True)
+        return [self._serialize_media(m) for m in all_media]
+
+    def _serialize_media(self, media):
+        # Фото
+        if isinstance(media, ProfilePhoto):
+            return {
+                "id": media.id,
+                "type": "photo",
+                "small": self._build_url(media.image_thumbnail_small),
+                "medium": self._build_url(media.image_thumbnail_medium),
+                "url": None,
+                "duration": None,
+                "created_at": media.created_at,
+                "is_active": media.is_active,
+            }
+        # Видео
+        else:
+            return {
+                "id": media.id,
+                "type": "video",
+                "small": None,
+                "medium": None,
+                "url": self._build_url(media.video),
+                "duration": media.duration,
+                "created_at": media.created_at,
+                "is_active": media.is_active,
+            }
+
+    def _build_url(self, field):
+        request = self.context.get("request")
+        if not field:
+            return None
+        return request.build_absolute_uri(field.url) if request else field.url
+
+
+
 
 
 class UserSerializer(serializers.ModelSerializer):

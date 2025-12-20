@@ -17,7 +17,7 @@ const ChatList: React.FC = () => {
   const { chats, selectedChat, loading, error, fetchChats, handleChatClick } =
     useChat();
   const currentUserId = user?.id;
-  console.log('chats', chats);
+
   const loadingContainerRef = useRef<HTMLDivElement>(null);
   const chatListRef = useRef<HTMLDivElement>(null);
   const chatItemsRef = useRef<Map<number, HTMLFormElement>>(new Map());

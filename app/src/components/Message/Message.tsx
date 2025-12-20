@@ -107,7 +107,7 @@ const Message: React.FC<MessageProps> = ({
   //     messages.forEach((msg) => (msg.el.style.transform = ''));
   //   };
   // }, []);
-  console.log(message);
+
   const handleDoubleClick = () => {};
   return (
     <div

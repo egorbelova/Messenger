@@ -83,31 +83,66 @@ def create_user_profile(sender, instance, created, **kwargs):
 def save_user_profile(sender, instance, **kwargs):
     if hasattr(instance, "profile"):
         instance.profile.save()
+from django.db import transaction
 
 
-class ProfilePhotoManager(models.Manager):
+class ProfileMediaManager(models.Manager):
     def get_primary(self, profile):
         return self.filter(profile=profile, is_primary=True).first()
 
     def get_active(self, profile):
         return self.filter(profile=profile, is_active=True)
 
-    def set_primary(self, profile, photo_id):
-        self.filter(profile=profile).update(is_primary=False)
-        photo = self.get(id=photo_id, profile=profile)
-        photo.is_primary = True
-        photo.save(update_fields=["is_primary"])
-        return photo
+    def set_primary(self, profile, media_id):
+        with transaction.atomic():
+            self.filter(profile=profile).update(is_primary=False)
+            media = self.select_for_update().get(
+                id=media_id,
+                profile=profile,
+            )
+            media.is_primary = True
+            media.save(update_fields=["is_primary"])
+            return media
+
+from django.db import models
+from django.core.exceptions import ValidationError
 
 
-class ProfilePhoto(models.Model):
+class ProfileMedia(models.Model):
     profile = models.ForeignKey(
         "Profile",
-        related_name="photos",
+        related_name="%(class)ss",
         on_delete=models.CASCADE,
     )
 
-    image = models.ImageField(upload_to="profiles/%Y/%m/%d/")
+    is_active = models.BooleanField(default=True)
+    is_primary = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    objects = ProfileMediaManager()
+
+    class Meta:
+        abstract = True
+        ordering = ["-created_at"]
+
+
+
+from django.core.validators import FileExtensionValidator
+from imagekit.models import ImageSpecField
+from imagekit.processors import ResizeToFill
+
+
+class ProfilePhoto(ProfileMedia):
+    image = models.ImageField(
+        upload_to="profiles/photos/%Y/%m/%d/",
+        validators=[
+            FileExtensionValidator(
+                allowed_extensions=["jpg", "jpeg", "png", "webp", "gif"]
+            )
+        ],
+    )
 
     image_thumbnail_small = ImageSpecField(
         source="image",
@@ -123,39 +158,72 @@ class ProfilePhoto(models.Model):
         options={"quality": 80},
     )
 
-    is_active = models.BooleanField(default=False)
-    is_primary = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    objects = ProfilePhotoManager()
-
-    class Meta:
-        ordering = ["-created_at"]
+    class Meta(ProfileMedia.Meta):
         constraints = [
             models.UniqueConstraint(
-                fields=["profile", "is_primary"],
+                fields=["profile"],
                 condition=models.Q(is_primary=True),
                 name="unique_primary_photo_per_profile",
             )
         ]
 
     def clean(self):
+        super().clean()
         if self.is_primary:
-            existing_primary = (
-                ProfilePhoto.objects.filter(profile=self.profile, is_primary=True)
-                .exclude(id=self.id)
-                .exists()
-            )
-            if existing_primary:
+            exists = ProfilePhoto.objects.filter(
+                profile=self.profile,
+                is_primary=True
+            ).exclude(id=self.id).exists()
+            if exists:
                 raise ValidationError("Profile already has a primary photo")
 
     def save(self, *args, **kwargs):
         self.full_clean()
         super().save(*args, **kwargs)
 
-    def __str__(self):
-        return f"Photo {self.id} - {self.profile.user.email}"
+from moviepy.video.io.VideoFileClip import VideoFileClip
+from django.core.validators import FileExtensionValidator
+
+
+from django.db import models
+from django.core.validators import FileExtensionValidator
+from django.core.exceptions import ValidationError
+
+class ProfileVideo(ProfileMedia):
+    video = models.FileField(
+        upload_to="profiles/videos/%Y/%m/%d/",
+        validators=[FileExtensionValidator(["mp4", "mov", "webm"])],
+    )
+
+    duration = models.FloatField(null=True, blank=True)
+
+    STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("processing", "Processing"),
+        ("done", "Done"),
+        ("failed", "Failed"),
+    ]
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="pending",
+    )
+
+    def clean(self):
+        super().clean()
+        if self.is_primary:
+            exists = ProfileVideo.objects.filter(
+                profile=self.profile,
+                is_primary=True
+            ).exclude(pk=self.pk).exists()
+            if exists:
+                raise ValidationError("Profile already has a primary video")
+
+
+
+
+
 
 
 # class RegisterForm(CustomUser):
@@ -178,6 +246,40 @@ class ProfilePhoto(models.Model):
 #     class Meta:
 #         model = CustomUser
 #         fields = ('first_name',)
+
+# class Contact(models.Model):
+#     owner = models.ForeignKey(
+#         User,
+#         on_delete=models.CASCADE,
+#         related_name="contacts"
+#     )
+#     contact = models.ForeignKey(
+#         User,
+#         on_delete=models.CASCADE,
+#         related_name="contact_of"
+#     )
+
+#     alias = models.CharField(max_length=100, blank=True)
+
+#     avatar_photo = models.ForeignKey(
+#         ProfilePhoto,
+#         null=True,
+#         blank=True,
+#         on_delete=models.SET_NULL,
+#         related_name="+"
+#     )
+
+#     avatar_video = models.ForeignKey(
+#         ProfileVideo,
+#         null=True,
+#         blank=True,
+#         on_delete=models.SET_NULL,
+#         related_name="+"
+#     )
+
+#     class Meta:
+#         unique_together = ("owner", "contact")
+
 
 
 import subprocess

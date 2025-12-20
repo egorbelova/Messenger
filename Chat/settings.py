@@ -8,10 +8,14 @@ LOGOUT_URL = reverse_lazy("logout")
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-STATIC_URL = "static/"
-STATIC_ROOT = os.path.join(BASE_DIR, STATIC_URL)
-STATIC_DIR = os.path.join(BASE_DIR, "static")
-STATICFILES = [STATIC_DIR]
+# STATIC_URL = "static/"
+# STATIC_ROOT = os.path.join(BASE_DIR, STATIC_URL)
+# STATIC_DIR = os.path.join(BASE_DIR, "static")
+# STATICFILES = [STATIC_DIR]
+
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_DIRS = [BASE_DIR / 'static']
 
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
@@ -33,31 +37,32 @@ SESSION_COOKIE_SAMESITE = "Lax"
 #     }
 # }
 
-# Application definition
+
 
 INSTALLED_APPS = [
     "daphne",
+    "channels",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.sites",
     "Site",
-    "channels",
     "rest_framework",
     "rest_framework.authtoken",
     "rest_framework_simplejwt",
+    "corsheaders",
     "debug_toolbar",
     "social_django",
-    "sslserver",
-    "corsheaders",
-    "django.contrib.sites",
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
     "allauth.socialaccount.providers.google",
+    "sslserver",
 ]
+
 
 SITE_ID = 1
 
@@ -186,17 +191,30 @@ LOGOUT_REDIRECT_URL = "login"
 ASGI_APPLICATION = "Chat.asgi.application"
 WSGI_APPLICATION = "Chat.wsgi.application"
 
-CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}
+# CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}
 
 
-# CHANNEL_LAYERS = {
-#     'default': {
-#         'BACKEND': 'channels_redis.core.RedisChannelLayer',
-#         'CONFIG': {
-#             "hosts": [('redis', 6379)],
-#         },
-#     },
-# }
+# settings.py
+REDIS_HOST = "localhost"  # для Mac/Windows
+REDIS_PORT = 6379
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [(REDIS_HOST, REDIS_PORT)],
+        },
+    },
+}
+CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
+CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/0"
+
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+
+
+
 
 
 MEDIA_URL = "/media/"
@@ -241,7 +259,7 @@ ALLOWED_HOSTS = ["*"]
 #     }
 # }
 
-SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+
 SESSION_CACHE_ALIAS = "default"
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
@@ -336,8 +354,4 @@ SIMPLE_JWT = {
     "AUTH_COOKIE_PATH": "/",
 }
 
-CELERY_BROKER_URL = "redis://localhost:6379/0"
-CELERY_RESULT_BACKEND = "redis://localhost:6379/0"
-CELERY_ACCEPT_CONTENT = ["json"]
-CELERY_TASK_SERIALIZER = "json"
-CELERY_RESULT_SERIALIZER = "json"
+

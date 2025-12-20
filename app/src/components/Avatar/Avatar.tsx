@@ -6,6 +6,7 @@ export interface AvatarProps {
   displayName: string;
   imageUrl?: string | null;
   className?: string;
+  mediaType?: string;
   onClick?: (e: React.MouseEvent<HTMLDivElement>) => void;
 }
 
@@ -13,6 +14,7 @@ const Avatar: React.FC<AvatarProps> = ({
   displayName,
   imageUrl,
   className = '',
+  mediaType = 'photo',
   onClick,
 }) => {
   const avatarColor = stringToColor(displayName);
@@ -71,18 +73,40 @@ const Avatar: React.FC<AvatarProps> = ({
       title={displayName}
       onClick={onClick}
     >
-      {imageUrl ? (
-        <img
-          className={styles.avatarImage}
-          src={imageUrl}
-          alt={`${displayName} avatar`}
-          loading='eager'
-        />
-      ) : (
-        <span className={styles.avatarInitials} style={{ fontSize }}>
-          {initials}
-        </span>
-      )}
+      {(() => {
+        if (!imageUrl) {
+          return (
+            <span className={styles.avatarInitials} style={{ fontSize }}>
+              {initials}
+            </span>
+          );
+        }
+
+        switch (mediaType) {
+          case 'video':
+            return (
+              <video
+                className={styles.avatarImage}
+                src={imageUrl}
+                muted
+                autoPlay
+                loop
+                playsInline
+              />
+            );
+
+          case 'photo':
+          default:
+            return (
+              <img
+                className={styles.avatarImage}
+                src={imageUrl}
+                alt={`${displayName} avatar`}
+                loading='eager'
+              />
+            );
+        }
+      })()}
     </div>
   );
 };

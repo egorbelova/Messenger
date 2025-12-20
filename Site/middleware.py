@@ -1,24 +1,24 @@
-from urllib.parse import parse_qs
-from django.contrib.auth.models import AnonymousUser
-from channels.db import database_sync_to_async
-from rest_framework_simplejwt.tokens import UntypedToken
-from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
-from django.contrib.auth import get_user_model
 from channels.middleware import BaseMiddleware
-
-User = get_user_model()
-
-
-@database_sync_to_async
-def get_user(user_id):
-    try:
-        return User.objects.get(id=user_id)
-    except User.DoesNotExist:
-        return AnonymousUser()
-
+from channels.db import database_sync_to_async
 
 class TokenAuthMiddlewareStack(BaseMiddleware):
     async def __call__(self, scope, receive, send):
+        # импортируем Django компоненты здесь, внутри метода
+        from django.contrib.auth.models import AnonymousUser
+        from django.contrib.auth import get_user_model
+        from rest_framework_simplejwt.tokens import UntypedToken
+        from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
+
+        User = get_user_model()
+
+        @database_sync_to_async
+        def get_user(user_id):
+            try:
+                return User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                return AnonymousUser()
+
+        # тут остальной код middleware
         headers = dict(scope["headers"])
         cookies = {}
         if b"cookie" in headers:
@@ -29,7 +29,6 @@ class TokenAuthMiddlewareStack(BaseMiddleware):
                     cookies[k] = v
 
         access_token = cookies.get("access_token")
-
         if access_token:
             try:
                 validated_token = UntypedToken(access_token)

@@ -383,7 +383,7 @@ const MessageList: React.FC = () => {
 
     return () => observer.disconnect();
   }, [messages]);
-  console.log('messages', messages);
+
   return (
     <div className='offset room_div room_body' id='display' ref={containerRef}>
       {menuVisible && (

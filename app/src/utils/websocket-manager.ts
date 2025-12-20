@@ -103,11 +103,24 @@ class WebSocketManager {
 
     const ws_protocol =
       window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-    const backend_port = 8000;
 
-    const token = localStorage.getItem('authToken');
+    let ws_host = window.location.host;
+    let ws_port = null;
 
-    let url = `${ws_protocol}${window.location.hostname}:${backend_port}/socket-server/${this.currentUserId}/`;
+    if (
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      window.location.port === '8000'
+    ) {
+      ws_port = 8000;
+    }
+
+    let url;
+    if (ws_port) {
+      url = `${ws_protocol}${window.location.hostname}:${ws_port}/socket-server/${this.currentUserId}/`;
+    } else {
+      url = `${ws_protocol}${ws_host}/socket-server/${this.currentUserId}/`;
+    }
 
     console.log('Connecting to WebSocket:', url);
 

@@ -1,9 +1,14 @@
-# project/celery.py
 import os
 from celery import Celery
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Chat.settings")
 
-app = Celery("project")
+app = Celery("Chat")
+
 app.config_from_object("django.conf:settings", namespace="CELERY")
 app.autodiscover_tasks()
+
+app.conf.update(
+    task_time_limit=300,  # 5 минут на задачу
+    task_soft_time_limit=270,
+)
