@@ -291,12 +291,14 @@ CORS_ALLOWED_ORIGINS = [
     "http://192.168.1.68:5173",
     "http://localhost:8000",
     "http://192.168.1.68:8000",
+    "https://chillin.nekotyan2d.ru"
 ]
 
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "http://192.168.1.68:5173",
+    "https://chillin.nekotyan2d.ru"
 ]
 
 # settings.py
